@@ -30,9 +30,6 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [
-    "onView:steeringDocsView"
-  ],
   "main": "./out/extension.js",
   "contributes": {
     "views": {
