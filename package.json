@@ -1,0 +1,214 @@
+{
+  "name": "steering-docs-browser",
+  "displayName": "Kiro Steering Documents Browser",
+  "description": "Browse, preview, and install Kiro steering documents from GitHub",
+  "version": "0.1.5",
+  "publisher": "mikeartee",
+  "icon": "icon.png",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikeartee/kiro-steering-docs-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/mikeartee/kiro-steering-docs-extension/issues"
+  },
+  "homepage": "https://github.com/mikeartee/kiro-steering-docs-extension#readme",
+  "keywords": [
+    "kiro",
+    "steering",
+    "ai",
+    "assistant",
+    "documents",
+    "guidance",
+    "rules",
+    "conventions"
+  ],
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:steeringDocsView"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "kiro": [
+        {
+          "id": "steeringDocsView",
+          "name": "Steering Documents",
+          "icon": "$(book)"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "steeringDocs.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "steeringDocs.preview",
+        "title": "Preview Document",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "steeringDocs.install",
+        "title": "Install Document",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "steeringDocs.quickLoad",
+        "title": "Quick Load (Install & Activate)",
+        "icon": "$(zap)"
+      },
+      {
+        "command": "steeringDocs.update",
+        "title": "Update Document",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "steeringDocs.checkUpdates",
+        "title": "Check for Updates",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "steeringDocs.setInclusionAlways",
+        "title": "Set Inclusion: Always"
+      },
+      {
+        "command": "steeringDocs.setInclusionManual",
+        "title": "Set Inclusion: Manual"
+      },
+      {
+        "command": "steeringDocs.setInclusionFileMatch",
+        "title": "Set Inclusion: File Match"
+      },
+      {
+        "command": "steeringDocs.showActiveOnly",
+        "title": "Show Active Documents Only",
+        "icon": "$(filter)"
+      },
+      {
+        "command": "steeringDocs.toggle",
+        "title": "Toggle Document",
+        "icon": "$(circle-outline)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "steeringDocs.refresh",
+          "when": "view == steeringDocsView",
+          "group": "navigation"
+        },
+        {
+          "command": "steeringDocs.checkUpdates",
+          "when": "view == steeringDocsView",
+          "group": "navigation"
+        },
+        {
+          "command": "steeringDocs.showActiveOnly",
+          "when": "view == steeringDocsView",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "steeringDocs.preview",
+          "when": "view == steeringDocsView && viewItem =~ /^document/",
+          "group": "navigation"
+        },
+        {
+          "command": "steeringDocs.quickLoad",
+          "when": "view == steeringDocsView && viewItem =~ /^document/",
+          "group": "inline"
+        },
+        {
+          "command": "steeringDocs.install",
+          "when": "view == steeringDocsView && viewItem == document-available",
+          "group": "1_actions"
+        },
+        {
+          "command": "steeringDocs.quickLoad",
+          "when": "view == steeringDocsView && viewItem == document-available",
+          "group": "1_actions"
+        },
+        {
+          "command": "steeringDocs.update",
+          "when": "view == steeringDocsView && viewItem == document-update-available",
+          "group": "1_actions"
+        },
+        {
+          "command": "steeringDocs.setInclusionAlways",
+          "when": "view == steeringDocsView && viewItem == document-installed",
+          "group": "2_inclusion"
+        },
+        {
+          "command": "steeringDocs.setInclusionManual",
+          "when": "view == steeringDocsView && viewItem == document-installed",
+          "group": "2_inclusion"
+        },
+        {
+          "command": "steeringDocs.setInclusionFileMatch",
+          "when": "view == steeringDocsView && viewItem == document-installed",
+          "group": "2_inclusion"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Kiro Steering Documents",
+      "properties": {
+        "steeringDocs.repository": {
+          "type": "string",
+          "default": "mikeartee/kiro-steering-docs",
+          "description": "GitHub repository containing steering documents"
+        },
+        "steeringDocs.branch": {
+          "type": "string",
+          "default": "main",
+          "description": "Branch to fetch documents from"
+        },
+        "steeringDocs.cacheTimeout": {
+          "type": "number",
+          "default": 3600,
+          "description": "Cache timeout in seconds"
+        },
+        "steeringDocs.autoCheckUpdates": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically check for updates on activation"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile",
+    "lint": "eslint src --ext ts",
+    "test": "node ./out/test/runTest.js"
+  },
+  "devDependencies": {
+    "@types/glob": "^8.1.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^18.x",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vscode/test-electron": "^2.3.0",
+    "eslint": "^8.40.0",
+    "glob": "^8.1.0",
+    "mocha": "^11.7.4",
+    "sharp": "^0.34.5",
+    "typescript": "^5.1.0"
+  },
+  "dependencies": {
+    "@types/js-yaml": "^4.0.5",
+    "js-yaml": "^4.1.0"
+  }
+}
