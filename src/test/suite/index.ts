@@ -10,7 +10,8 @@ export function run(): Promise<void> {
         timeout: 10000 // 10 second timeout for integration tests
     });
 
-    const testsRoot = path.resolve(__dirname, '..');
+    // Look for tests in the entire out directory to include unit tests in services/
+    const testsRoot = path.resolve(__dirname, '..', '..');
 
     return new Promise<void>((resolve, reject) => {
         glob.glob('**/**.test.js', { cwd: testsRoot }, (err: Error | null, files: string[]) => {

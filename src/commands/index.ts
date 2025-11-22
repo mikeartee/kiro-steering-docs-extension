@@ -305,9 +305,10 @@ async function handleSetInclusionMode(
       return;
     }
 
-    const docName: string = item.metadata.name;
+    // Use installed document path if available, otherwise use metadata path
+    const docPath: string = item.installed?.path || item.metadata.path;
 
-    await documentService.setInclusionMode(docName, mode);
+    await documentService.setInclusionMode(docPath, mode);
 
     // Refresh tree view
     treeProvider.refresh();
@@ -337,7 +338,8 @@ async function handleSetInclusionFileMatch(
       return;
     }
 
-    const docName: string = item.metadata.name;
+    // Use installed document path if available, otherwise use metadata path
+    const docPath: string = item.installed?.path || item.metadata.path;
 
     // Prompt for file match pattern
     const pattern = await vscode.window.showInputBox({
@@ -355,7 +357,7 @@ async function handleSetInclusionFileMatch(
       return; // User cancelled
     }
 
-    await documentService.setInclusionMode(docName, "fileMatch", pattern);
+    await documentService.setInclusionMode(docPath, "fileMatch", pattern);
 
     // Refresh tree view
     treeProvider.refresh();
@@ -483,12 +485,13 @@ async function handleToggle(
 
     const doc: DocumentMetadata = item.metadata;
 
-    // Check if document is currently installed
+    // Check if document is currently installed using path-based matching
     const installedDocs = await documentService.getInstalledDocuments();
-    const isInstalled = installedDocs.some((d) => d.name === doc.name);
+    const installedDoc = installedDocs.find((d) => d.path === doc.path);
+    const isInstalled = !!installedDoc;
 
     if (isInstalled) {
-      // Document is installed - uninstall it
+      // Document is installed - uninstall it using the installed document's path
       await vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
@@ -496,7 +499,7 @@ async function handleToggle(
           cancellable: false,
         },
         async () => {
-          await documentService.uninstallDocument(doc.name);
+          await documentService.uninstallDocument(installedDoc.path);
         }
       );
     } else {

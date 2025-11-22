@@ -25,6 +25,92 @@ export class DocumentService {
     ) {}
 
     /**
+     * Extract the directory portion from a document path
+     * @param fullPath Full path like "agents/bmad-spec-converter.md" or "tech.md"
+     * @returns Directory path like "agents" or empty string for root-level documents
+     */
+    private getRelativePath(fullPath: string): string {
+        // Validate path to prevent path traversal attacks
+        if (fullPath.includes('..') || fullPath.startsWith('/') || fullPath.startsWith('\\')) {
+            throw new ExtensionError(
+                'Invalid path: path traversal or absolute paths are not allowed',
+                ErrorCode.FILE_SYSTEM_ERROR,
+                false
+            );
+        }
+
+        // Normalize path separators to forward slashes
+        const normalizedPath = fullPath.replace(/\\/g, '/');
+        
+        // Extract directory portion
+        const lastSlashIndex = normalizedPath.lastIndexOf('/');
+        if (lastSlashIndex === -1) {
+            // No directory, root-level document
+            return '';
+        }
+        
+        return normalizedPath.substring(0, lastSlashIndex);
+    }
+
+    /**
+     * Recursively scan a directory for markdown files
+     * @param dirUri Directory URI to scan
+     * @param baseUri Base directory URI for calculating relative paths
+     * @returns Array of installed documents with relative paths
+     */
+    private async scanDirectoryRecursive(
+        dirUri: vscode.Uri,
+        baseUri: vscode.Uri
+    ): Promise<InstalledDocument[]> {
+        const installedDocs: InstalledDocument[] = [];
+
+        try {
+            const entries = await vscode.workspace.fs.readDirectory(dirUri);
+
+            for (const [name, type] of entries) {
+                const itemUri = vscode.Uri.joinPath(dirUri, name);
+
+                if (type === vscode.FileType.File && name.endsWith('.md')) {
+                    try {
+                        const content = await vscode.workspace.fs.readFile(itemUri);
+                        const contentStr = Buffer.from(content).toString('utf-8');
+                        const { frontmatter } = this.frontmatterService.parse(contentStr);
+
+                        // Get file stats for installed date
+                        const stats = await vscode.workspace.fs.stat(itemUri);
+
+                        // Calculate relative path from base directory
+                        const relativePath = itemUri.fsPath
+                            .substring(baseUri.fsPath.length + 1)
+                            .replace(/\\/g, '/');
+
+                        installedDocs.push({
+                            name,
+                            path: relativePath,
+                            version: frontmatter.version || '1.0.0',
+                            installedAt: new Date(stats.mtime),
+                            sha: frontmatter.sha || '',
+                            inclusionMode: frontmatter.inclusion as 'always' | 'manual' | 'fileMatch' | undefined,
+                            fileMatchPattern: frontmatter.fileMatchPattern
+                        });
+                    } catch (error) {
+                        console.error(`Failed to read document ${name}:`, error);
+                    }
+                } else if (type === vscode.FileType.Directory) {
+                    // Recursively scan subdirectory
+                    const subDocs = await this.scanDirectoryRecursive(itemUri, baseUri);
+                    installedDocs.push(...subDocs);
+                }
+            }
+        } catch (error) {
+            // Log error but continue - allows partial results if some directories fail
+            console.error(`Failed to scan directory ${dirUri.fsPath}:`, error);
+        }
+
+        return installedDocs;
+    }
+
+    /**
      * Clear the document list cache
      */
     clearCache(): void {
@@ -142,37 +228,8 @@ export class DocumentService {
         const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
 
         try {
-            // Check if directory exists
-            const entries = await vscode.workspace.fs.readDirectory(steeringDirUri);
-            const installedDocs: InstalledDocument[] = [];
-
-            for (const [name, type] of entries) {
-                if (type === vscode.FileType.File && name.endsWith('.md')) {
-                    const fileUri = vscode.Uri.joinPath(steeringDirUri, name);
-                    
-                    try {
-                        const content = await vscode.workspace.fs.readFile(fileUri);
-                        const contentStr = Buffer.from(content).toString('utf-8');
-                        const { frontmatter } = this.frontmatterService.parse(contentStr);
-
-                        // Get file stats for installed date
-                        const stats = await vscode.workspace.fs.stat(fileUri);
-
-                        installedDocs.push({
-                            name,
-                            path: name, // Just the filename since we don't know the category folder
-                            version: frontmatter.version || '1.0.0',
-                            installedAt: new Date(stats.mtime),
-                            sha: frontmatter.sha || '',
-                            inclusionMode: frontmatter.inclusion as 'always' | 'manual' | 'fileMatch' | undefined,
-                            fileMatchPattern: frontmatter.fileMatchPattern
-                        });
-                    } catch (error) {
-                        console.error(`Failed to read document ${name}:`, error);
-                    }
-                }
-            }
-
+            // Use recursive scan to find all markdown files
+            const installedDocs = await this.scanDirectoryRecursive(steeringDirUri, steeringDirUri);
             return installedDocs;
         } catch (error) {
             // Directory doesn't exist or can't be read
@@ -208,7 +265,22 @@ export class DocumentService {
         }
 
         const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
-        const fileUri = vscode.Uri.joinPath(steeringDirUri, doc.name);
+        
+        // Extract directory path from doc.path (e.g., "agents" from "agents/bmad-spec-converter.md")
+        const dirPath = this.getRelativePath(doc.path);
+        
+        // Determine target directory and file URI
+        let targetDirUri = steeringDirUri;
+        let fileUri: vscode.Uri;
+        
+        if (dirPath) {
+            // Document is in a subdirectory
+            targetDirUri = vscode.Uri.joinPath(steeringDirUri, dirPath);
+            fileUri = vscode.Uri.joinPath(targetDirUri, doc.name);
+        } else {
+            // Root-level document
+            fileUri = vscode.Uri.joinPath(steeringDirUri, doc.name);
+        }
 
         try {
             // Check if file already exists
@@ -229,11 +301,16 @@ export class DocumentService {
                 // File doesn't exist, continue with installation
             }
 
-            // Create directory if it doesn't exist
+            // Create base steering directory if it doesn't exist
             try {
                 await vscode.workspace.fs.createDirectory(steeringDirUri);
             } catch {
                 // Directory might already exist, ignore error
+            }
+
+            // Create subdirectory if needed (createDirectory is idempotent)
+            if (dirPath) {
+                await vscode.workspace.fs.createDirectory(targetDirUri);
             }
 
             // Download document content
@@ -280,9 +357,9 @@ export class DocumentService {
 
     /**
      * Uninstall a document by removing it from the local steering directory
-     * @param docName Document name (filename)
+     * @param docPath Document relative path (e.g., "agents/bmad-spec-converter.md" or "tech.md")
      */
-    async uninstallDocument(docName: string): Promise<void> {
+    async uninstallDocument(docPath: string): Promise<void> {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
             throw new ExtensionError(
@@ -292,21 +369,28 @@ export class DocumentService {
             );
         }
 
-        const fileUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR, docName);
+        // Resolve relative path to full URI under .kiro/steering/
+        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
+        const fileUri = vscode.Uri.joinPath(steeringDirUri, docPath);
 
         try {
             // Check if file exists before attempting to delete
             await vscode.workspace.fs.stat(fileUri);
             
-            // Delete the file
+            // Delete the file from correct subdirectory location
             await vscode.workspace.fs.delete(fileUri);
 
+            // Extract filename for display message
+            const fileName = docPath.split('/').pop() || docPath;
+            
             // Show success notification
-            vscode.window.showInformationMessage(`Document "${docName}" uninstalled successfully`);
+            vscode.window.showInformationMessage(`Document "${fileName}" uninstalled successfully`);
         } catch (error) {
             if (error instanceof vscode.FileSystemError) {
+                // Extract filename for error message
+                const fileName = docPath.split('/').pop() || docPath;
                 throw new ExtensionError(
-                    `Document "${docName}" not found`,
+                    `Document "${fileName}" not found`,
                     ErrorCode.NOT_FOUND,
                     false
                 );
@@ -321,12 +405,12 @@ export class DocumentService {
 
     /**
      * Set the inclusion mode for an installed document
-     * @param docName Document name (filename)
+     * @param docPath Document relative path (e.g., "agents/bmad-spec-converter.md" or "tech.md")
      * @param mode Inclusion mode to set
      * @param fileMatchPattern Optional file match pattern (required if mode is 'fileMatch')
      */
     async setInclusionMode(
-        docName: string,
+        docPath: string,
         mode: 'always' | 'manual' | 'fileMatch',
         fileMatchPattern?: string
     ): Promise<void> {
@@ -339,7 +423,9 @@ export class DocumentService {
             );
         }
 
-        const fileUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR, docName);
+        // Resolve relative path to full URI under .kiro/steering/
+        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
+        const fileUri = vscode.Uri.joinPath(steeringDirUri, docPath);
 
         try {
             // Read current content
@@ -357,13 +443,15 @@ export class DocumentService {
             const contentBuffer = Buffer.from(updatedContent, 'utf-8');
             await vscode.workspace.fs.writeFile(fileUri, contentBuffer);
 
+            // Extract filename for display message
+            const fileName = docPath.split('/').pop() || docPath;
             vscode.window.showInformationMessage(
-                `Inclusion mode for "${docName}" set to "${mode}"`
+                `Inclusion mode for "${fileName}" set to "${mode}"`
             );
         } catch (error) {
             if (error instanceof vscode.FileSystemError) {
                 throw new ExtensionError(
-                    `Document "${docName}" not found`,
+                    `Document "${docPath}" not found`,
                     ErrorCode.NOT_FOUND,
                     false
                 );
@@ -378,16 +466,18 @@ export class DocumentService {
 
     /**
      * Get the inclusion mode for an installed document
-     * @param docName Document name (filename)
+     * @param docPath Document relative path (e.g., "agents/bmad-spec-converter.md" or "tech.md")
      * @returns Inclusion mode or undefined if not set
      */
-    async getInclusionMode(docName: string): Promise<string | undefined> {
+    async getInclusionMode(docPath: string): Promise<string | undefined> {
         const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
         if (!workspaceFolder) {
             return undefined;
         }
 
-        const fileUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR, docName);
+        // Resolve relative path to full URI under .kiro/steering/
+        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
+        const fileUri = vscode.Uri.joinPath(steeringDirUri, docPath);
 
         try {
             const content = await vscode.workspace.fs.readFile(fileUri);
@@ -411,8 +501,9 @@ export class DocumentService {
         const updates: UpdateInfo[] = [];
 
         for (const installed of installedDocuments) {
-            // Find matching remote document by name
-            const remote = remoteDocuments.find(doc => doc.name === installed.name);
+            // Find matching remote document by path (not just name)
+            // This ensures documents with the same name in different folders are treated as different documents
+            const remote = remoteDocuments.find(doc => doc.path === installed.path);
             
             if (remote && remote.sha !== installed.sha) {
                 updates.push({
@@ -440,7 +531,20 @@ export class DocumentService {
             );
         }
 
-        const fileUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR, doc.name);
+        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
+        
+        // Extract directory path from doc.path to locate the document in the same subdirectory
+        const dirPath = this.getRelativePath(doc.path);
+        
+        // Construct file URI using the relative path from doc.path
+        let fileUri: vscode.Uri;
+        if (dirPath) {
+            // Document is in a subdirectory
+            fileUri = vscode.Uri.joinPath(steeringDirUri, dirPath, doc.name);
+        } else {
+            // Root-level document
+            fileUri = vscode.Uri.joinPath(steeringDirUri, doc.name);
+        }
 
         try {
             // Read current document to preserve inclusion mode
@@ -468,7 +572,7 @@ export class DocumentService {
             frontmatter.sha = doc.sha;
             newContent = this.frontmatterService.stringify(frontmatter, body);
 
-            // Write updated content
+            // Write updated content to the same subdirectory location
             const contentBuffer = Buffer.from(newContent, 'utf-8');
             await vscode.workspace.fs.writeFile(fileUri, contentBuffer);
 

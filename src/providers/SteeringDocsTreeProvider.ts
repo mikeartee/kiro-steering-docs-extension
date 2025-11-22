@@ -131,8 +131,8 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
         const documentItems: TreeItem[] = [];
 
         for (const doc of categoryDocs) {
-            // Find matching installed document
-            const installed = this.installedDocuments.find(inst => inst.name === doc.name);
+            // Find matching installed document by path instead of name
+            const installed = this.installedDocuments.find(inst => inst.path === doc.path);
 
             // Check if document has an update
             const hasUpdate = installed ? installed.sha !== doc.sha : false;
