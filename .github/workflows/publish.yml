@@ -51,7 +51,7 @@ jobs:
         continue-on-error: true
 
       - name: Publish to VS Code Marketplace
-        if: success() && secrets.VSCE_TOKEN != ''
+        if: success()
         run: vsce publish -p ${{ secrets.VSCE_TOKEN }}
         continue-on-error: true
 
