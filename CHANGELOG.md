@@ -2,6 +2,16 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
+## [0.1.6] - 2025-11-24
+
+### Added
+- Recursive directory traversal for fetching documents from GitHub
+- Support for nested folder structures in the remote repository (e.g., `agents/bmad/`, `code-formatting/languages/`)
+
+### Changed
+- Extension now discovers documents at any depth within category folders
+- Improved organization support for large document collections
+
 ## [0.1.1] - 2025-11-12
 
 ### Fixed

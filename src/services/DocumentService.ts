@@ -111,6 +111,56 @@ export class DocumentService {
     }
 
     /**
+     * Recursively fetch markdown documents from a GitHub directory
+     * @param dirPath Directory path to scan
+     * @param categoryId Category ID for the documents
+     * @returns Array of document metadata
+     */
+    private async fetchDocumentsRecursive(
+        dirPath: string,
+        categoryId: string
+    ): Promise<DocumentMetadata[]> {
+        const documents: DocumentMetadata[] = [];
+
+        try {
+            const contents = await this.githubClient.getRepositoryContents(dirPath);
+
+            for (const item of contents) {
+                // Skip README.md files - they are repository documentation, not steering docs
+                if (item.type === 'file' && item.name.toLowerCase() === 'readme.md') {
+                    continue;
+                }
+
+                if (item.type === 'file' && item.name.endsWith('.md')) {
+                    // Fetch document content to parse frontmatter
+                    const content = await this.githubClient.getRawFileContent(item.path);
+                    const { frontmatter } = this.frontmatterService.parse(content);
+
+                    documents.push({
+                        name: item.name,
+                        path: item.path,
+                        category: categoryId,
+                        version: frontmatter.version || '1.0.0',
+                        description: frontmatter.description || '',
+                        sha: item.sha,
+                        size: item.size,
+                        downloadUrl: item.download_url
+                    });
+                } else if (item.type === 'dir') {
+                    // Recursively fetch documents from subdirectory
+                    const subDocs = await this.fetchDocumentsRecursive(item.path, categoryId);
+                    documents.push(...subDocs);
+                }
+            }
+        } catch (error) {
+            // Log error but continue - allows partial results if some directories fail
+            console.error(`Failed to fetch documents from ${dirPath}:`, error);
+        }
+
+        return documents;
+    }
+
+    /**
      * Clear the document list cache
      */
     clearCache(): void {
@@ -149,31 +199,9 @@ export class DocumentService {
                 }
                 
                 try {
-                    const contents = await this.githubClient.getRepositoryContents(categoryPath);
-                    
-                    for (const item of contents) {
-                        // Skip README.md files - they are repository documentation, not steering docs
-                        if (item.type === 'file' && item.name.toLowerCase() === 'readme.md') {
-                            continue;
-                        }
-
-                        if (item.type === 'file' && item.name.endsWith('.md')) {
-                            // Fetch document content to parse frontmatter
-                            const content = await this.githubClient.getRawFileContent(item.path);
-                            const { frontmatter } = this.frontmatterService.parse(content);
-
-                            documents.push({
-                                name: item.name,
-                                path: item.path,
-                                category: category.id,
-                                version: frontmatter.version || '1.0.0',
-                                description: frontmatter.description || '',
-                                sha: item.sha,
-                                size: item.size,
-                                downloadUrl: item.download_url
-                            });
-                        }
-                    }
+                    // Recursively fetch all documents from category directory and subdirectories
+                    const categoryDocs = await this.fetchDocumentsRecursive(categoryPath, category.id);
+                    documents.push(...categoryDocs);
                 } catch (error) {
                     // Log error but continue with other categories
                     console.error(`Failed to fetch documents from category ${category.id}:`, error);
