@@ -6,7 +6,8 @@ A VS Code extension that enables browsing, previewing, and installing Kiro steer
 
 - **Simple Toggle Control**: One-click toggle to activate or deactivate steering documents
 - **Kiro Sidebar Integration**: Access documents directly from the Kiro sidebar alongside other Kiro tools
-- **Browse Documents**: Explore available steering documents organized by category
+- **Browse Documents**: Explore available steering documents organized by category and folder hierarchy
+- **Hierarchical Organization**: Navigate nested folder structures within categories for better document organization
 - **Preview Content**: View document content before installation with markdown preview
 - **Quick Load**: Install and activate documents in one action
 - **Manage Inclusion Modes**: Control when Kiro loads specific guidance into the agent context
@@ -102,13 +103,14 @@ Configure the extension through VS Code settings (File > Preferences > Settings)
 
 ## Tree View Icons
 
-The tree view uses icons to indicate document status:
+The tree view uses icons to indicate document status and organization:
 
 - ⚪ **Not Installed**: Circle outline - document is available for installation
 - 🟢 **Always Active**: Green filled circle - inclusion mode is "always"
 - 🔵 **Manual**: Blue filled circle - inclusion mode is "manual"
 - 🟡 **File Match**: Yellow filled circle - inclusion mode is "fileMatch"
 - 📁 **Category**: Folder icon - document category grouping
+- 📂 **Folder**: Folder icon - nested folder within a category (collapsible)
 
 ## Examples
 
@@ -278,6 +280,18 @@ MIT License - see [LICENSE](LICENSE) file for details
 Copyright (c) 2025 Michael Rewiri-Thorsen
 
 ## Changelog
+
+### 0.1.7 (2025-11-24)
+
+- **Feature**: Hierarchical folder tree view for nested document structures
+- **Feature**: Visual folder organization within categories
+- **Improved**: Better navigation for large document collections with nested folders
+- **Fixed**: Document installation, updates, and uninstall now work correctly with subdirectories
+
+### 0.1.6 (2025-11-24)
+
+- **Feature**: Recursive directory traversal for fetching documents from GitHub
+- **Feature**: Support for nested folder structures in remote repository
 
 ### 0.1.5 (2025-11-17)
 

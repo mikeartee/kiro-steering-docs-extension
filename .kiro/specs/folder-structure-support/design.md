@@ -71,30 +71,84 @@ No changes required to:
 
 ### SteeringDocsTreeProvider Changes
 
-#### Optional Enhancement: Folder Nodes
+#### Hierarchical Tree View
 
-The tree provider can be enhanced to show folder hierarchy:
+The tree provider will be enhanced to show nested folder hierarchy:
 
-**Current Structure:**
+**Current Structure (Flat):**
 ```
-📁 Code Quality
-  ○ typescript-strict.md
-  ○ eslint-config.md
-📁 Agents
-  ○ bmad-spec-converter.md
-```
-
-**Enhanced Structure (Optional):**
-```
-📁 Code Quality
-  ○ typescript-strict.md
-  ○ eslint-config.md
-📁 Agents
-  📁 agents/
-    ○ bmad-spec-converter.md
+📁 Code Formatting
+  ○ typescript-formatting.md
+  ○ python-formatting.md
+  ○ bash-formatting.md
+  ○ json-formatting.md
+  ○ yaml-formatting.md
+  ○ markdown-formatting.md
 ```
 
-For the initial implementation, we'll keep the current flat display within categories. The folder structure exists on disk but isn't reflected in the tree view hierarchy.
+**New Structure (Hierarchical):**
+```
+📁 Code Formatting
+  📁 languages
+    ○ typescript-formatting.md
+    ○ python-formatting.md
+    ○ bash-formatting.md
+  📁 data-formats
+    ○ json-formatting.md
+    ○ yaml-formatting.md
+  📁 markup
+    ○ markdown-formatting.md
+```
+
+#### Modified Tree Item Types
+
+**Add FolderTreeItem:**
+```typescript
+interface FolderTreeItem {
+    type: 'folder';
+    categoryId: string;      // Parent category
+    path: string;            // Relative path from category root
+    label: string;           // Display name (folder name)
+    parentPath?: string;     // Parent folder path (for nested folders)
+}
+```
+
+**Update TreeItem Union:**
+```typescript
+type TreeItem = CategoryTreeItem | FolderTreeItem | DocumentTreeItem;
+```
+
+#### Modified Methods
+
+**`getChildren(element?: TreeItem)`**
+- When element is undefined: return categories (unchanged)
+- When element is a category: return top-level folders and documents
+- When element is a folder: return child folders and documents
+- When element is a document: return empty array (unchanged)
+
+**`createFolderTreeItem(folder: FolderTreeItem)`**
+- Create tree item with collapsible state
+- Use folder icon (`ThemeIcon('folder')`)
+- Set context value for folder-specific commands
+
+#### Helper Methods (New)
+
+**`buildFolderHierarchy(categoryId: string, documents: DocumentTreeItem[]): TreeItem[]`**
+- Extract unique folder paths from document paths
+- Create folder tree items for each unique path
+- Group documents by their immediate parent folder
+- Return sorted list of folders and root-level documents
+
+**`extractFolderPath(documentPath: string): string | null`**
+- Extract the immediate parent folder from a document path
+- Example: `languages/typescript-formatting.md` → `languages`
+- Example: `code-quality/patterns/api.md` → `code-quality/patterns`
+- Example: `tech.md` → `null` (root level)
+
+**`getChildrenForFolder(categoryId: string, folderPath: string): TreeItem[]`**
+- Get all documents and subfolders within a specific folder
+- Filter documents by parent folder path
+- Return sorted list of subfolders and documents
 
 ## Data Models
 
@@ -164,6 +218,18 @@ The `path` field changes from filename-only to relative path from `.kiro/steerin
 *For any* subdirectory path, attempting to create it multiple times should succeed without error, whether the directory exists or not.
 
 **Validates: Requirements 1.1, 1.5**
+
+### Property 6: Folder hierarchy completeness
+
+*For any* set of documents with nested paths, the tree view should create folder nodes for every unique directory level in those paths.
+
+**Validates: Requirements 7.1, 7.4, 7.5**
+
+### Property 7: Document nesting correctness
+
+*For any* document with path `a/b/c/doc.md`, the tree view should display it nested under category → folder `a` → folder `b` → folder `c` → document.
+
+**Validates: Requirements 7.3**
 
 ## Error Handling
 
@@ -284,6 +350,26 @@ npm install --save-dev fast-check
 - Create same directory multiple times
 - Verify no errors thrown and directory exists
 
+**Property 6: Folder hierarchy completeness**
+```typescript
+// Feature: folder-structure-support, Property 6: Folder hierarchy completeness
+// For any set of documents with nested paths, the tree view should create folder 
+// nodes for every unique directory level in those paths
+```
+- Generate random sets of documents with various nested paths
+- Build folder hierarchy from document list
+- Verify all unique directory levels have corresponding folder nodes
+
+**Property 7: Document nesting correctness**
+```typescript
+// Feature: folder-structure-support, Property 7: Document nesting correctness
+// For any document with path a/b/c/doc.md, the tree view should display it nested 
+// under category → folder a → folder b → folder c → document
+```
+- Generate random deeply nested document paths
+- Build tree hierarchy
+- Verify document appears at correct nesting level with correct parent chain
+
 ### Integration Testing
 
 Integration tests will verify end-to-end workflows:
@@ -336,6 +422,62 @@ function getRelativePath(baseUri: vscode.Uri, fileUri: vscode.Uri): string {
     const basePath = baseUri.fsPath;
     const filePath = fileUri.fsPath;
     return path.relative(basePath, filePath).replace(/\\/g, '/');
+}
+```
+
+### Hierarchical Tree Building
+
+Build folder hierarchy from flat document list:
+```typescript
+function buildFolderHierarchy(categoryId: string, documents: DocumentTreeItem[]): TreeItem[] {
+    const items: TreeItem[] = [];
+    const folderMap = new Map<string, Set<string>>();
+    
+    // Extract all unique folder paths and their children
+    for (const doc of documents) {
+        const parts = doc.metadata.path.split('/');
+        if (parts.length > 1) {
+            // Document is in a folder
+            const folderPath = parts.slice(0, -1).join('/');
+            
+            // Track all folder levels
+            for (let i = 1; i <= parts.length - 1; i++) {
+                const currentPath = parts.slice(0, i).join('/');
+                if (!folderMap.has(currentPath)) {
+                    folderMap.set(currentPath, new Set());
+                }
+            }
+        }
+    }
+    
+    // Create folder tree items
+    for (const [folderPath, _] of folderMap) {
+        const parts = folderPath.split('/');
+        const label = parts[parts.length - 1];
+        const parentPath = parts.length > 1 ? parts.slice(0, -1).join('/') : undefined;
+        
+        items.push({
+            type: 'folder',
+            categoryId,
+            path: folderPath,
+            label,
+            parentPath
+        });
+    }
+    
+    // Add root-level documents
+    for (const doc of documents) {
+        if (!doc.metadata.path.includes('/')) {
+            items.push(doc);
+        }
+    }
+    
+    // Sort: folders first, then documents
+    return items.sort((a, b) => {
+        if (a.type === 'folder' && b.type !== 'folder') return -1;
+        if (a.type !== 'folder' && b.type === 'folder') return 1;
+        return 0;
+    });
 }
 ```
 
@@ -392,13 +534,6 @@ Respect file system permissions:
 - Don't attempt to escalate privileges
 
 ## Future Enhancements
-
-### Enhanced Tree View
-
-Display folder hierarchy in the tree view:
-- Add folder nodes between category and documents
-- Allow collapsing/expanding folders
-- Show folder-level operations (install all, update all)
 
 ### Folder-Level Operations
 

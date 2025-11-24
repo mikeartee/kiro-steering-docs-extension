@@ -15,8 +15,8 @@ import {
  * Service for managing steering documents
  */
 export class DocumentService {
-    private readonly CACHE_KEY_DOCUMENTS = 'documentList';
-    private readonly STEERING_DIR = '.kiro/steering';
+    private readonly cacheKeyDocuments = 'documentList';
+    private readonly steeringDir = '.kiro/steering';
 
     constructor(
         private readonly githubClient: GitHubClient,
@@ -164,7 +164,7 @@ export class DocumentService {
      * Clear the document list cache
      */
     clearCache(): void {
-        this.cacheManager.clear(this.CACHE_KEY_DOCUMENTS);
+        this.cacheManager.clear(this.cacheKeyDocuments);
     }
 
     /**
@@ -173,7 +173,7 @@ export class DocumentService {
      */
     async fetchDocumentList(): Promise<DocumentMetadata[]> {
         // Try to get from cache first
-        const cached = this.cacheManager.get<DocumentMetadata[]>(this.CACHE_KEY_DOCUMENTS);
+        const cached = this.cacheManager.get<DocumentMetadata[]>(this.cacheKeyDocuments);
         if (cached) {
             return cached;
         }
@@ -209,12 +209,12 @@ export class DocumentService {
             }
 
             // Cache the results
-            await this.cacheManager.set(this.CACHE_KEY_DOCUMENTS, documents, 3600); // 1 hour TTL
+            await this.cacheManager.set(this.cacheKeyDocuments, documents, 3600); // 1 hour TTL
 
             return documents;
         } catch (error) {
             // If fetch fails, try to return cached data even if expired
-            const cached = this.cacheManager.get<DocumentMetadata[]>(this.CACHE_KEY_DOCUMENTS);
+            const cached = this.cacheManager.get<DocumentMetadata[]>(this.cacheKeyDocuments);
             if (cached) {
                 return cached;
             }
@@ -253,7 +253,7 @@ export class DocumentService {
             return [];
         }
 
-        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
+        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.steeringDir);
 
         try {
             // Use recursive scan to find all markdown files
@@ -292,7 +292,7 @@ export class DocumentService {
             );
         }
 
-        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
+        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.steeringDir);
         
         // Extract directory path from doc.path (e.g., "agents" from "agents/bmad-spec-converter.md")
         const dirPath = this.getRelativePath(doc.path);
@@ -398,7 +398,7 @@ export class DocumentService {
         }
 
         // Resolve relative path to full URI under .kiro/steering/
-        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
+        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.steeringDir);
         const fileUri = vscode.Uri.joinPath(steeringDirUri, docPath);
 
         try {
@@ -452,7 +452,7 @@ export class DocumentService {
         }
 
         // Resolve relative path to full URI under .kiro/steering/
-        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
+        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.steeringDir);
         const fileUri = vscode.Uri.joinPath(steeringDirUri, docPath);
 
         try {
@@ -504,7 +504,7 @@ export class DocumentService {
         }
 
         // Resolve relative path to full URI under .kiro/steering/
-        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
+        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.steeringDir);
         const fileUri = vscode.Uri.joinPath(steeringDirUri, docPath);
 
         try {
@@ -559,7 +559,7 @@ export class DocumentService {
             );
         }
 
-        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.STEERING_DIR);
+        const steeringDirUri = vscode.Uri.joinPath(workspaceFolder.uri, this.steeringDir);
         
         // Extract directory path from doc.path to locate the document in the same subdirectory
         const dirPath = this.getRelativePath(doc.path);

@@ -2,6 +2,24 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
+## [0.1.7] - 2025-11-24
+
+### Added
+- Hierarchical folder tree view for nested document structures
+- Visual folder organization within categories in the tree view
+- Support for arbitrary nesting depth in folder structures
+- Folder icons and collapsible folder nodes for better navigation
+
+### Changed
+- Tree view now displays documents organized in their folder hierarchy
+- Documents in subdirectories are shown under their parent folders
+- Improved visual organization for large document collections with nested structures
+
+### Fixed
+- Document installation now correctly creates subdirectories
+- Update detection properly matches documents by their full path
+- Uninstall operations work correctly for documents in subdirectories
+
 ## [0.1.6] - 2025-11-24
 
 ### Added

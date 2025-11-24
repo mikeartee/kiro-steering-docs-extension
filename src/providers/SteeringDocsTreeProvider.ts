@@ -5,7 +5,7 @@ import { DocumentMetadata, InstalledDocument, CategoryDefinition } from '../mode
 /**
  * Tree item types for the steering documents tree view
  */
-type TreeItem = CategoryTreeItem | DocumentTreeItem;
+type TreeItem = CategoryTreeItem | FolderTreeItem | DocumentTreeItem;
 
 /**
  * Category node in the tree
@@ -15,6 +15,17 @@ interface CategoryTreeItem {
     id: string;
     label: string;
     description: string;
+}
+
+/**
+ * Folder node in the tree
+ */
+interface FolderTreeItem {
+    type: 'folder';
+    categoryId: string;
+    path: string;
+    label: string;
+    parentPath?: string;
 }
 
 /**
@@ -70,6 +81,8 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
     getTreeItem(element: TreeItem): vscode.TreeItem {
         if (element.type === 'category') {
             return this.createCategoryTreeItem(element);
+        } else if (element.type === 'folder') {
+            return this.createFolderTreeItem(element);
         } else {
             return this.createDocumentTreeItem(element);
         }
@@ -85,10 +98,19 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
         }
 
         if (element.type === 'category') {
-            // Return documents in this category
-            return this.getDocumentsForCategory(element.id);
+            // Return top-level folders and documents in this category
+            const documents = await this.getDocumentsForCategory(element.id);
+            // Filter to only DocumentTreeItem types for buildFolderHierarchy
+            const documentItems = documents.filter((item): item is DocumentTreeItem => item.type === 'document');
+            return this.buildFolderHierarchy(element.id, documentItems);
         }
 
+        if (element.type === 'folder') {
+            // Return child folders and documents within this folder
+            return this.getChildrenForFolder(element.categoryId, element.path);
+        }
+
+        // Document nodes have no children
         return [];
     }
 
@@ -201,12 +223,230 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
     }
 
     /**
+     * Extract folder path from a document path
+     * Returns the immediate parent folder path, or null if document is at root level
+     * 
+     * @param documentPath - The full document path (e.g., "languages/typescript-formatting.md")
+     * @returns The folder path (e.g., "languages") or null for root-level documents
+     * 
+     * @example
+     * extractFolderPath("languages/typescript-formatting.md") // returns "languages"
+     * extractFolderPath("code-quality/patterns/api.md") // returns "code-quality/patterns"
+     * extractFolderPath("tech.md") // returns null
+     */
+    private extractFolderPath(documentPath: string): string | null {
+        const lastSlashIndex = documentPath.lastIndexOf('/');
+        if (lastSlashIndex === -1) {
+            // No slash found - document is at root level
+            return null;
+        }
+        // Return everything before the last slash
+        return documentPath.substring(0, lastSlashIndex);
+    }
+
+    /**
+     * Build folder hierarchy from a flat list of documents
+     * Creates folder nodes for each unique directory level in document paths
+     * Supports arbitrary nesting depth without hardcoded limits
+     * 
+     * @param categoryId - The category ID these documents belong to
+     * @param documents - Flat list of document tree items
+     * @returns Hierarchical list of folders and root-level documents
+     * 
+     * @example
+     * Input documents with paths:
+     *   - "languages/typescript-formatting.md"
+     *   - "languages/python-formatting.md"
+     *   - "data-formats/json-formatting.md"
+     *   - "tech.md"
+     * 
+     * Output tree items:
+     *   - FolderTreeItem { path: "data-formats", label: "data-formats" }
+     *   - FolderTreeItem { path: "languages", label: "languages" }
+     *   - DocumentTreeItem { path: "tech.md" }
+     */
+    private buildFolderHierarchy(categoryId: string, documents: DocumentTreeItem[]): TreeItem[] {
+        const items: TreeItem[] = [];
+        const folderSet = new Set<string>();
+
+        // Extract all unique folder paths from documents
+        for (const doc of documents) {
+            const folderPath = this.extractFolderPath(doc.metadata.path);
+            
+            if (folderPath !== null) {
+                // Document is in a folder - track all folder levels
+                const parts = folderPath.split('/');
+                
+                // Add all folder levels (e.g., for "a/b/c", add "a", "a/b", and "a/b/c")
+                for (let i = 1; i <= parts.length; i++) {
+                    const currentPath = parts.slice(0, i).join('/');
+                    folderSet.add(currentPath);
+                }
+            }
+        }
+
+        // Create folder tree items for all unique folder paths
+        for (const folderPath of folderSet) {
+            const parts = folderPath.split('/');
+            const label = parts[parts.length - 1]; // Last part is the folder name
+            const parentPath = parts.length > 1 ? parts.slice(0, -1).join('/') : undefined;
+
+            items.push({
+                type: 'folder',
+                categoryId,
+                path: folderPath,
+                label,
+                parentPath
+            });
+        }
+
+        // Add root-level documents (documents without a folder path)
+        for (const doc of documents) {
+            const folderPath = this.extractFolderPath(doc.metadata.path);
+            if (folderPath === null) {
+                items.push(doc);
+            }
+        }
+
+        // Sort: folders first (alphabetically), then documents (alphabetically)
+        return items.sort((a, b) => {
+            // Folders before documents
+            if (a.type === 'folder' && b.type !== 'folder') {
+                return -1;
+            }
+            if (a.type !== 'folder' && b.type === 'folder') {
+                return 1;
+            }
+
+            // Both are folders or both are documents - sort alphabetically
+            if (a.type === 'folder' && b.type === 'folder') {
+                return a.label.localeCompare(b.label);
+            }
+            if (a.type === 'document' && b.type === 'document') {
+                return a.metadata.name.localeCompare(b.metadata.name);
+            }
+
+            return 0;
+        });
+    }
+
+    /**
+     * Get children (subfolders and documents) for a specific folder
+     * 
+     * @param categoryId - The category ID
+     * @param folderPath - The folder path (e.g., "languages" or "code-quality/patterns")
+     * @returns List of child folders and documents within this folder
+     * 
+     * @example
+     * For folderPath "languages" with documents:
+     *   - "languages/typescript-formatting.md"
+     *   - "languages/python-formatting.md"
+     *   - "languages/advanced/generics.md"
+     * 
+     * Returns:
+     *   - FolderTreeItem { path: "languages/advanced", label: "advanced" }
+     *   - DocumentTreeItem { path: "languages/typescript-formatting.md" }
+     *   - DocumentTreeItem { path: "languages/python-formatting.md" }
+     */
+    private getChildrenForFolder(categoryId: string, folderPath: string): TreeItem[] {
+        const items: TreeItem[] = [];
+        const childFolders = new Set<string>();
+
+        // Get all documents in this category
+        const categoryDocs = this.remoteDocuments.filter(doc => doc.category === categoryId);
+
+        // Find documents and subfolders that are direct children of this folder
+        for (const doc of categoryDocs) {
+            const docPath = doc.path;
+
+            // Check if document is within this folder
+            if (docPath.startsWith(folderPath + '/')) {
+                // Get the relative path from the folder
+                const relativePath = docPath.substring(folderPath.length + 1);
+                const slashIndex = relativePath.indexOf('/');
+
+                if (slashIndex === -1) {
+                    // Document is a direct child of this folder
+                    const installed = this.installedDocuments.find(inst => inst.path === doc.path);
+                    const hasUpdate = installed ? installed.sha !== doc.sha : false;
+
+                    // Apply active filter if enabled
+                    if (this.showActiveOnly) {
+                        const isActive = installed?.inclusionMode === 'always';
+                        if (!isActive) {
+                            continue;
+                        }
+                    }
+
+                    items.push({
+                        type: 'document',
+                        metadata: doc,
+                        installed,
+                        hasUpdate
+                    });
+                } else {
+                    // Document is in a subfolder - track the subfolder
+                    const subfolderName = relativePath.substring(0, slashIndex);
+                    const subfolderPath = folderPath + '/' + subfolderName;
+                    childFolders.add(subfolderPath);
+                }
+            }
+        }
+
+        // Create folder tree items for subfolders
+        for (const subfolderPath of childFolders) {
+            const parts = subfolderPath.split('/');
+            const label = parts[parts.length - 1];
+
+            items.push({
+                type: 'folder',
+                categoryId,
+                path: subfolderPath,
+                label,
+                parentPath: folderPath
+            });
+        }
+
+        // Sort: folders first (alphabetically), then documents (alphabetically)
+        return items.sort((a, b) => {
+            // Folders before documents
+            if (a.type === 'folder' && b.type !== 'folder') {
+                return -1;
+            }
+            if (a.type !== 'folder' && b.type === 'folder') {
+                return 1;
+            }
+
+            // Both are folders or both are documents - sort alphabetically
+            if (a.type === 'folder' && b.type === 'folder') {
+                return a.label.localeCompare(b.label);
+            }
+            if (a.type === 'document' && b.type === 'document') {
+                return a.metadata.name.localeCompare(b.metadata.name);
+            }
+
+            return 0;
+        });
+    }
+
+    /**
      * Create VS Code tree item for a category
      */
     private createCategoryTreeItem(category: CategoryTreeItem): vscode.TreeItem {
         const item = new vscode.TreeItem(category.label, vscode.TreeItemCollapsibleState.Collapsed);
         item.tooltip = category.description || category.label;
         item.contextValue = 'category';
+        item.iconPath = new vscode.ThemeIcon('folder');
+        return item;
+    }
+
+    /**
+     * Create VS Code tree item for a folder
+     */
+    private createFolderTreeItem(folder: FolderTreeItem): vscode.TreeItem {
+        const item = new vscode.TreeItem(folder.label, vscode.TreeItemCollapsibleState.Collapsed);
+        item.tooltip = folder.path;
+        item.contextValue = 'folder';
         item.iconPath = new vscode.ThemeIcon('folder');
         return item;
     }

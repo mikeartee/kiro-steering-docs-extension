@@ -82,10 +82,26 @@ This feature adds support for organizing steering documents into subdirectories 
 3. WHEN a user installs an agent document THEN the Extension SHALL install it to `.kiro/steering/agents/` with the document filename
 4. WHEN the Extension displays agent documents in the tree view THEN the Extension SHALL show them under an "Agents" category node
 
+### Requirement 7
+
+**User Story:** As a user, I want to see nested folder structures in the tree view, so that I can navigate deeply nested document hierarchies like `code-formatting/languages/` or `practices/code-quality/`.
+
+#### Acceptance Criteria
+
+1. WHEN the Extension displays a category with nested folders THEN the Extension SHALL show folder nodes for each subdirectory level
+2. WHEN a user expands a folder node THEN the Extension SHALL display both subfolders and documents within that folder
+3. WHEN the Extension displays a document path like `code-formatting/languages/typescript-formatting.md` THEN the Extension SHALL show it under "Code Formatting" → "languages" → "typescript-formatting.md"
+4. WHEN a folder contains only other folders and no documents THEN the Extension SHALL still display the folder node
+5. WHEN the Extension builds the tree structure THEN the Extension SHALL support arbitrary nesting depth without hardcoded limits
+6. WHEN a user clicks on a folder node THEN the Extension SHALL expand or collapse that folder to show or hide its contents
+7. WHEN the Extension displays folder nodes THEN the Extension SHALL use folder icons to distinguish them from document nodes
+
 ## Notes
 
 - The current filtering logic (skipping README.md, ignoring docs/templates folders) should continue to work for all categories including agents
 - The folder structure should be derived from the category ID in categories.json (e.g., category "agents" maps to folder `/agents`)
 - Empty subdirectories are acceptable and don't need to be cleaned up automatically
 - The extension should not attempt to migrate existing root-level documents to subfolders automatically
+- Folder nodes should be collapsible/expandable to allow users to navigate deep hierarchies efficiently
+- The tree view should dynamically build the folder structure from document paths, not require explicit folder definitions
 

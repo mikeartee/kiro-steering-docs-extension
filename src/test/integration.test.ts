@@ -72,19 +72,43 @@ description: "Test document"
 This is a test document for integration testing.
 `;
 
+    private mockCategoriesJson = JSON.stringify({
+        categories: [
+            {
+                id: 'test',
+                name: 'Test',
+                description: 'Test category'
+            }
+        ]
+    });
+
     constructor() {
         super('test/repo', 'main');
     }
 
-    async fetchDocumentList(): Promise<DocumentMetadata[]> {
-        return this.mockDocuments;
+    async getRepositoryContents(path: string): Promise<any[]> {
+        // Return mock directory contents for the test category
+        if (path === 'test') {
+            return this.mockDocuments.map(doc => ({
+                name: doc.name,
+                path: doc.path,
+                type: 'file',
+                sha: doc.sha,
+                size: doc.size,
+                download_url: doc.downloadUrl
+            }));
+        }
+        return [];
     }
 
     async getFileContent(_path: string): Promise<string> {
         return this.mockContent;
     }
 
-    async getRawFileContent(_path: string): Promise<string> {
+    async getRawFileContent(path: string): Promise<string> {
+        if (path === 'categories.json') {
+            return this.mockCategoriesJson;
+        }
         return this.mockContent;
     }
 
@@ -106,6 +130,13 @@ suite('Integration Tests', () => {
     let frontmatterService: FrontmatterService;
     let documentService: DocumentService;
     let treeProvider: SteeringDocsTreeProvider;
+
+    // Helper function to get the correct file URI for a document
+    function getDocumentFileUri(doc: DocumentMetadata): vscode.Uri {
+        const pathParts = doc.path.split('/');
+        const dirPath = pathParts.slice(0, -1).join('/');
+        return vscode.Uri.joinPath(steeringDir, dirPath, doc.name);
+    }
 
     setup(async () => {
         // Get workspace folder
@@ -175,8 +206,8 @@ suite('Integration Tests', () => {
         // Install document
         await documentService.installDocument(doc);
 
-        // Verify file was created
-        const fileUri = vscode.Uri.joinPath(steeringDir, doc.name);
+        // Verify file was created at the correct path (including subdirectories)
+        const fileUri = getDocumentFileUri(doc);
         const stat = await vscode.workspace.fs.stat(fileUri);
         assert.ok(stat.type === vscode.FileType.File, 'Document file should exist');
 
@@ -193,8 +224,8 @@ suite('Integration Tests', () => {
         // Quick load document
         await documentService.quickLoadDocument(doc);
 
-        // Verify file was created
-        const fileUri = vscode.Uri.joinPath(steeringDir, doc.name);
+        // Verify file was created at the correct path
+        const fileUri = getDocumentFileUri(doc);
         const stat = await vscode.workspace.fs.stat(fileUri);
         assert.ok(stat.type === vscode.FileType.File, 'Document file should exist');
 
@@ -223,7 +254,7 @@ suite('Integration Tests', () => {
         await documentService.updateDocument(updates[0].document);
 
         // Verify file still exists
-        const fileUri = vscode.Uri.joinPath(steeringDir, doc.name);
+        const fileUri = getDocumentFileUri(doc);
         const stat = await vscode.workspace.fs.stat(fileUri);
         assert.ok(stat.type === vscode.FileType.File, 'Document file should still exist');
     });
@@ -235,15 +266,15 @@ suite('Integration Tests', () => {
         // Install document
         await documentService.installDocument(doc);
 
-        // Set inclusion mode to always
-        await documentService.setInclusionMode(doc.name, 'always');
+        // Set inclusion mode to always (use full path from doc.path)
+        await documentService.setInclusionMode(doc.path, 'always');
 
         // Verify inclusion mode
-        const mode = await documentService.getInclusionMode(doc.name);
+        const mode = await documentService.getInclusionMode(doc.path);
         assert.strictEqual(mode, 'always', 'Inclusion mode should be "always"');
 
         // Verify file content
-        const fileUri = vscode.Uri.joinPath(steeringDir, doc.name);
+        const fileUri = getDocumentFileUri(doc);
         const content = await vscode.workspace.fs.readFile(fileUri);
         const contentStr = Buffer.from(content).toString('utf8');
         assert.ok(contentStr.includes('inclusion: "always"'), 'File should contain inclusion: "always"');
@@ -257,10 +288,10 @@ suite('Integration Tests', () => {
         await documentService.quickLoadDocument(doc);
 
         // Change to manual
-        await documentService.setInclusionMode(doc.name, 'manual');
+        await documentService.setInclusionMode(doc.path, 'manual');
 
         // Verify inclusion mode
-        const mode = await documentService.getInclusionMode(doc.name);
+        const mode = await documentService.getInclusionMode(doc.path);
         assert.strictEqual(mode, 'manual', 'Inclusion mode should be "manual"');
     });
 
@@ -272,14 +303,14 @@ suite('Integration Tests', () => {
         await documentService.installDocument(doc);
 
         // Set inclusion mode to fileMatch
-        await documentService.setInclusionMode(doc.name, 'fileMatch', '*.ts');
+        await documentService.setInclusionMode(doc.path, 'fileMatch', '*.ts');
 
         // Verify inclusion mode
-        const mode = await documentService.getInclusionMode(doc.name);
+        const mode = await documentService.getInclusionMode(doc.path);
         assert.strictEqual(mode, 'fileMatch', 'Inclusion mode should be "fileMatch"');
 
         // Verify file content includes pattern
-        const fileUri = vscode.Uri.joinPath(steeringDir, doc.name);
+        const fileUri = getDocumentFileUri(doc);
         const content = await vscode.workspace.fs.readFile(fileUri);
         const contentStr = Buffer.from(content).toString('utf8');
         assert.ok(contentStr.includes('inclusion: "fileMatch"'), 'File should contain inclusion: "fileMatch"');
@@ -294,7 +325,7 @@ suite('Integration Tests', () => {
         await documentService.installDocument(doc);
 
         // Get original content
-        const fileUri = vscode.Uri.joinPath(steeringDir, doc.name);
+        const fileUri = getDocumentFileUri(doc);
         const originalContent = await vscode.workspace.fs.readFile(fileUri);
         const originalStr = Buffer.from(originalContent).toString('utf8');
 
@@ -303,7 +334,7 @@ suite('Integration Tests', () => {
         assert.ok(originalStr.includes('category: "test"'), 'Should have category');
 
         // Set inclusion mode
-        await documentService.setInclusionMode(doc.name, 'always');
+        await documentService.setInclusionMode(doc.path, 'always');
 
         // Get updated content
         const updatedContent = await vscode.workspace.fs.readFile(fileUri);
