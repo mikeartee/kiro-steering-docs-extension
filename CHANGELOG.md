@@ -2,6 +2,14 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
+## [0.1.8] - 2025-11-24
+
+### Fixed
+- Fixed double layering in tree view where category folders were duplicated
+- Tree view now correctly strips category prefix from document paths
+- Documents in `agents/file.md` now appear directly under "Agents" category instead of "Agents" → "agents" → "file.md"
+- Improved folder hierarchy display for cleaner navigation
+
 ## [0.1.7] - 2025-11-24
 
 ### Added

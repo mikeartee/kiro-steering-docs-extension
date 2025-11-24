@@ -281,6 +281,12 @@ Copyright (c) 2025 Michael Rewiri-Thorsen
 
 ## Changelog
 
+### 0.1.8 (2025-11-24)
+
+- **Fixed**: Double layering in tree view where category folders were duplicated
+- **Fixed**: Tree view now correctly strips category prefix from document paths
+- **Improved**: Cleaner folder hierarchy display for better navigation
+
 ### 0.1.7 (2025-11-24)
 
 - **Feature**: Hierarchical folder tree view for nested document structures
