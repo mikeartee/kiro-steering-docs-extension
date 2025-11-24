@@ -271,7 +271,14 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
 
         // Extract all unique folder paths from documents
         for (const doc of documents) {
-            const folderPath = this.extractFolderPath(doc.metadata.path);
+            // Strip category prefix from path to avoid redundant folder levels
+            let pathToProcess = doc.metadata.path;
+            const categoryPrefix = categoryId + '/';
+            if (pathToProcess.startsWith(categoryPrefix)) {
+                pathToProcess = pathToProcess.substring(categoryPrefix.length);
+            }
+            
+            const folderPath = this.extractFolderPath(pathToProcess);
             
             if (folderPath !== null) {
                 // Document is in a folder - track all folder levels
@@ -300,13 +307,20 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
             });
         }
 
-        // Add root-level documents (documents without a folder path)
+        // Add root-level documents (documents without a folder path after stripping category prefix)
         for (const doc of documents) {
-            const folderPath = this.extractFolderPath(doc.metadata.path);
+            // Strip category prefix from path
+            let pathToProcess = doc.metadata.path;
+            const categoryPrefix = categoryId + '/';
+            if (pathToProcess.startsWith(categoryPrefix)) {
+                pathToProcess = pathToProcess.substring(categoryPrefix.length);
+            }
+            
+            const folderPath = this.extractFolderPath(pathToProcess);
             if (folderPath === null) {
                 items.push(doc);
             }
-        }
+        }    
 
         // Sort: folders first (alphabetically), then documents (alphabetically)
         return items.sort((a, b) => {
@@ -357,7 +371,12 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
 
         // Find documents and subfolders that are direct children of this folder
         for (const doc of categoryDocs) {
-            const docPath = doc.path;
+            // Strip category prefix from document path
+            let docPath = doc.path;
+            const categoryPrefix = categoryId + '/';
+            if (docPath.startsWith(categoryPrefix)) {
+                docPath = docPath.substring(categoryPrefix.length);
+            }
 
             // Check if document is within this folder
             if (docPath.startsWith(folderPath + '/')) {
