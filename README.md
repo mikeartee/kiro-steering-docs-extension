@@ -83,7 +83,7 @@ Access these commands from the Command Palette (Ctrl+Shift+P / Cmd+Shift+P):
 
 ## Configuration
 
-Configure the extension through VS Code settings (File > Preferences > Settings):
+Configure the extension through Kiro Code settings (File > Preferences > Settings > Extensions > Kiro Steering Documents):
 
 ```json
 {
