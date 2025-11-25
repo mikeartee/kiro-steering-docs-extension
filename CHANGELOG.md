@@ -2,6 +2,11 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
+## [0.1.9] - 2025-11-25
+
+### Changed
+- Updated extension icon with new design
+
 ## [0.1.8] - 2025-11-24
 
 ### Fixed

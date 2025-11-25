@@ -281,6 +281,10 @@ Copyright (c) 2025 Michael Rewiri-Thorsen
 
 ## Changelog
 
+### 0.1.9 (2025-11-25)
+
+- **Changed**: Updated extension icon with new design
+
 ### 0.1.8 (2025-11-24)
 
 - **Fixed**: Double layering in tree view where category folders were duplicated
