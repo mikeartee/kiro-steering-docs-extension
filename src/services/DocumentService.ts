@@ -136,7 +136,7 @@ export class DocumentService {
                     const content = await this.githubClient.getRawFileContent(item.path);
                     const { frontmatter } = this.frontmatterService.parse(content);
 
-                    documents.push({
+                    const doc = {
                         name: item.name,
                         path: item.path,
                         category: categoryId,
@@ -144,8 +144,19 @@ export class DocumentService {
                         description: frontmatter.description || '',
                         sha: item.sha,
                         size: item.size,
-                        downloadUrl: item.download_url
+                        downloadUrl: item.download_url,
+                        tags: frontmatter.tags || [],
+                        applicableTo: frontmatter.applicableTo || [],
+                        requiredDependencies: frontmatter.requiredDependencies || [],
+                        filePatterns: frontmatter.filePatterns || []
+                    };
+                    console.log('[DocumentService] Parsed document:', doc.name, {
+                        tags: doc.tags,
+                        requiredDependencies: doc.requiredDependencies,
+                        filePatterns: doc.filePatterns,
+                        applicableTo: doc.applicableTo
                     });
+                    documents.push(doc);
                 } else if (item.type === 'dir') {
                     // Recursively fetch documents from subdirectory
                     const subDocs = await this.fetchDocumentsRecursive(item.path, categoryId);
@@ -174,8 +185,19 @@ export class DocumentService {
     async fetchDocumentList(): Promise<DocumentMetadata[]> {
         // Try to get from cache first
         const cached = this.cacheManager.get<DocumentMetadata[]>(this.cacheKeyDocuments);
-        if (cached) {
-            return cached;
+        if (cached && cached.length > 0) {
+            // Check if cache has the new metadata fields - if not, invalidate it
+            const firstDoc = cached[0];
+            const hasNewFields = firstDoc.tags !== undefined ||
+                                firstDoc.requiredDependencies !== undefined ||
+                                firstDoc.filePatterns !== undefined;
+
+            if (hasNewFields) {
+                console.log('[DocumentService] Using cached documents');
+                return cached;
+            } else {
+                console.log('[DocumentService] Cache is outdated (missing metadata fields), fetching fresh data');
+            }
         }
 
         try {

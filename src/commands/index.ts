@@ -1,7 +1,10 @@
 import * as vscode from "vscode";
 import { DocumentService } from "../services/DocumentService";
 import { SteeringDocsTreeProvider } from "../providers/SteeringDocsTreeProvider";
+import { RecommendationPanel } from "../providers/RecommendationPanel";
 import { DocumentMetadata, ExtensionError } from "../models/types";
+import { RecommendationService } from "../services/RecommendationService";
+import { recommendDocuments } from "./recommendDocuments";
 
 /**
  * Register all command handlers
@@ -9,7 +12,9 @@ import { DocumentMetadata, ExtensionError } from "../models/types";
 export function registerCommands(
   context: vscode.ExtensionContext,
   documentService: DocumentService,
-  treeProvider: SteeringDocsTreeProvider
+  treeProvider: SteeringDocsTreeProvider,
+  recommendationService?: RecommendationService,
+  recommendationPanel?: RecommendationPanel
 ): void {
   // Refresh command
   context.subscriptions.push(
@@ -119,6 +124,19 @@ export function registerCommands(
       }
     )
   );
+
+  // Recommend documents command
+  if (recommendationService && recommendationPanel) {
+    console.log('[Commands] Registering steeringDocs.recommend command');
+    context.subscriptions.push(
+      vscode.commands.registerCommand("steeringDocs.recommend", async () => {
+        console.log('[Commands] steeringDocs.recommend command invoked');
+        await recommendDocuments(context, recommendationService, recommendationPanel, documentService);
+      })
+    );
+  } else {
+    console.log('[Commands] WARNING: recommendationService or recommendationPanel is missing!');
+  }
 }
 
 /**

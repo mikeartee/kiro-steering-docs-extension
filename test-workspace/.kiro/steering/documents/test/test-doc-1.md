@@ -2,8 +2,9 @@
 version: 1.0.0
 category: test
 description: Test document
+inclusion: fileMatch
 sha: abc123
-inclusion: always
+fileMatchPattern: '*.ts'
 ---
 
 # Test Document

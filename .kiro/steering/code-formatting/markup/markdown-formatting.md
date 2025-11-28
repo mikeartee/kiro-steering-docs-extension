@@ -8,12 +8,22 @@ tags:
   - linting
   - formatting
 inclusion: always
-sha: 8baa660f3ffb0bfda8b5939308e81688cb23ff19
+sha: 5d33fbb2a72b4d9ee6c8f9e5291a41ea28b606bf
 ---
 
 ## Core Principle: Get It Right the First Time
 
 **Never create markdown files with formatting issues.** Always produce clean, properly formatted markdown that passes all linting checks on the first attempt. This prevents wasted time, backtracking, and credit consumption from fixing avoidable issues.
+
+## RULES
+
+You MUST follow these rules when creating or editing markdown files:
+
+1. You MUST end markdown files with a single newline (`\n` not `\n\n`)
+2. You MUST run getDiagnostics immediately after creating/editing any .md file
+3. You MUST fix all linting errors before proceeding to other tasks
+4. You MUST NOT use multiple consecutive blank lines (causes MD012 errors)
+5. You MUST NOT proceed without fixing MD047 errors
 
 ## How Kiro Will Write Markdown
 

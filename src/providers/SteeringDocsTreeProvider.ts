@@ -557,14 +557,14 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
         // Installed - show colored dot based on inclusion mode
         switch (doc.installed.inclusionMode) {
             case 'always':
-                // Green dot for always-included documents
+                // Green filled circle for always-included documents
                 return new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.green'));
             case 'fileMatch':
-                // Yellow dot for file-match documents
+                // Yellow filled circle for file-match documents
                 return new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.yellow'));
             case 'manual':
-                // Blue dot for manual documents
-                return new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.blue'));
+                // Outline circle for manual documents (same as not installed, but tooltip will differ)
+                return new vscode.ThemeIcon('circle-outline');
             default:
                 // Fallback to green for unknown modes
                 return new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.green'));

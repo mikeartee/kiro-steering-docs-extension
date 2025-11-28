@@ -4,7 +4,10 @@ A VS Code extension that enables browsing, previewing, and installing Kiro steer
 
 ## Features
 
+- **AI-Powered Recommendations**: Get smart document suggestions based on your workspace analysis
 - **Simple Toggle Control**: One-click toggle to activate or deactivate steering documents
+- **Bulk Activation**: Multi-select documents from recommendations for instant activation
+- **Smart Defaults**: Automatic inclusion mode selection based on document metadata
 - **Kiro Sidebar Integration**: Access documents directly from the Kiro sidebar alongside other Kiro tools
 - **Browse Documents**: Explore available steering documents organized by category and folder hierarchy
 - **Hierarchical Organization**: Navigate nested folder structures within categories for better document organization
@@ -29,6 +32,13 @@ A VS Code extension that enables browsing, previewing, and installing Kiro steer
 
 ### Basic Usage
 
+#### Get Recommendations (Fastest Way)
+1. **Click the sparkle ✨ icon** at the top of the Steering Documents view
+2. **Select documents** from the Quick Pick (use Tab to multi-select)
+3. **Press Enter** - documents activate instantly with smart defaults
+4. Done! Documents are now active in your workspace
+
+#### Manual Browse & Install
 1. **Browse Documents**: Expand categories in the tree view to see available steering documents
 2. **Preview**: Click the eye icon (👁️) to preview a document's content
 3. **Toggle On/Off**: Click the toggle button next to any document to activate or deactivate it
@@ -71,6 +81,7 @@ Documents are automatically loaded when files matching a specific pattern are in
 
 Access these commands from the Command Palette (Ctrl+Shift+P / Cmd+Shift+P):
 
+- **Get Recommendations** (✨): AI-powered document suggestions with bulk activation
 - **Toggle Document**: Simple on/off control for activating or deactivating documents
 - **Refresh**: Reload the document list from GitHub
 - **Check for Updates**: Check all installed documents for available updates
@@ -280,6 +291,19 @@ MIT License - see [LICENSE](LICENSE) file for details
 Copyright (c) 2025 Michael Rewiri-Thorsen
 
 ## Changelog
+
+### 0.2.0 (2025-01-29)
+
+- **Feature**: AI-powered document recommendations based on workspace analysis
+- **Feature**: Smart recommendation scoring analyzing dependencies, languages, and frameworks
+- **Feature**: Multi-select Quick Pick for bulk document activation
+- **Feature**: Smart default inclusion modes based on document metadata
+- **Feature**: Integration with Kiro sidebar view container
+- **Changed**: Extension now appears in Kiro sidebar instead of separate view
+- **Changed**: Streamlined recommendation workflow with direct activation
+- **Improved**: Icon indicators - Green (always), Yellow (fileMatch), Outline (manual/not installed)
+- **Fixed**: Recommendation system handles empty workspaces correctly
+- **Fixed**: Bulk activation skips already-installed documents
 
 ### 0.1.9 (2025-11-25)
 

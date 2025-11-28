@@ -4,7 +4,12 @@ import { CacheManager } from './services/CacheManager';
 import { FrontmatterService } from './services/FrontmatterService';
 import { DocumentService } from './services/DocumentService';
 import { SteeringDocsTreeProvider } from './providers/SteeringDocsTreeProvider';
+import { RecommendationPanel } from './providers/RecommendationPanel';
 import { registerCommands } from './commands';
+import { RecommendationService } from './services/RecommendationService';
+import { WorkspaceAnalyzer } from './services/WorkspaceAnalyzer';
+import { WorkspaceAnalysisCache } from './services/WorkspaceAnalysisCache';
+import { DocumentMatcher } from './services/DocumentMatcher';
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('Kiro Steering Documents Browser is now active');
@@ -28,8 +33,24 @@ export function activate(context: vscode.ExtensionContext) {
     });
     context.subscriptions.push(treeView);
 
+    // Initialize recommendation services
+    const workspaceAnalyzer = new WorkspaceAnalyzer();
+    const workspaceAnalysisCache = new WorkspaceAnalysisCache(workspaceAnalyzer);
+    const documentMatcher = new DocumentMatcher();
+    const recommendationService = new RecommendationService(
+        documentService,
+        workspaceAnalysisCache,
+        documentMatcher
+    );
+    const recommendationPanel = new RecommendationPanel(context.extensionUri, documentService);
+
+    // Register cache for disposal
+    context.subscriptions.push({
+        dispose: () => workspaceAnalysisCache.dispose()
+    });
+
     // Register all command handlers
-    registerCommands(context, documentService, treeProvider);
+    registerCommands(context, documentService, treeProvider, recommendationService, recommendationPanel);
 
     // Optionally trigger auto-check for updates
     const autoCheckUpdates = config.get<boolean>('autoCheckUpdates', true);

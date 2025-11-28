@@ -2,7 +2,7 @@
   "name": "steering-docs-browser",
   "displayName": "Kiro Steering Documents Browser",
   "description": "Browse, preview, and install Kiro steering documents from GitHub",
-  "version": "0.1.9",
+  "version": "0.2.0",
   "publisher": "mikeartee",
   "icon": "icon.png",
   "license": "MIT",
@@ -29,6 +29,9 @@
   },
   "categories": [
     "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -93,10 +96,21 @@
         "command": "steeringDocs.toggle",
         "title": "Toggle Document",
         "icon": "$(circle-outline)"
+      },
+      {
+        "command": "steeringDocs.recommend",
+        "title": "Get Recommendations",
+        "category": "Steering Docs",
+        "icon": "$(sparkle)"
       }
     ],
     "menus": {
       "view/title": [
+        {
+          "command": "steeringDocs.recommend",
+          "when": "view == steeringDocsView",
+          "group": "navigation"
+        },
         {
           "command": "steeringDocs.refresh",
           "when": "view == steeringDocsView",

@@ -2,6 +2,30 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
+## [0.2.0] - 2025-01-29
+
+### Added
+- AI-powered document recommendations based on workspace analysis
+- Smart recommendation scoring system that analyzes:
+  - Package.json dependencies and dev dependencies
+  - Programming languages used in the workspace
+  - Test frameworks and linting tools
+  - File types and patterns
+- Multi-select Quick Pick interface for bulk document activation
+- Smart default inclusion modes based on document metadata
+- Bulk activation with progress tracking
+- Integration with Kiro sidebar view container
+
+### Changed
+- Extension now appears in Kiro sidebar instead of separate view
+- Streamlined recommendation workflow - direct activation from Quick Pick
+- Improved icon indicators: Green (always), Yellow (fileMatch), Outline (manual/not installed)
+- Removed visual clutter from recommendation Quick Pick for cleaner UX
+
+### Fixed
+- Recommendation system now properly handles empty workspaces
+- Bulk activation correctly skips already-installed documents
+
 ## [0.1.9] - 2025-11-25
 
 ### Changed

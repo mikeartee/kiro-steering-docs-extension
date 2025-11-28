@@ -138,6 +138,32 @@ suite('Integration Tests', () => {
         return vscode.Uri.joinPath(steeringDir, dirPath, doc.name);
     }
 
+    /**
+     * Recursively clean up test directories and files
+     */
+    async function cleanupTestFiles(): Promise<void> {
+        try {
+            // Delete the entire test directory structure
+            const testDir = vscode.Uri.joinPath(steeringDir, 'documents', 'test');
+            await vscode.workspace.fs.delete(testDir, { recursive: true });
+        } catch (error) {
+            // Directory might not exist
+        }
+
+        try {
+            // Also clean up any root-level test files
+            const files = await vscode.workspace.fs.readDirectory(steeringDir);
+            for (const [name, type] of files) {
+                if (type === vscode.FileType.File && name.startsWith('test-')) {
+                    const fileUri = vscode.Uri.joinPath(steeringDir, name);
+                    await vscode.workspace.fs.delete(fileUri);
+                }
+            }
+        } catch (error) {
+            // Directory might not exist
+        }
+    }
+
     setup(async () => {
         // Get workspace folder
         const workspaceFolders = vscode.workspace.workspaceFolders;
@@ -154,6 +180,9 @@ suite('Integration Tests', () => {
             // Directory might already exist
         }
 
+        // Clean up any leftover test files from previous runs
+        await cleanupTestFiles();
+
         // Initialize services with mocks
         memento = new MockMemento();
         githubClient = new MockGitHubClient();
@@ -164,18 +193,8 @@ suite('Integration Tests', () => {
     });
 
     teardown(async () => {
-        // Clean up test files
-        try {
-            const files = await vscode.workspace.fs.readDirectory(steeringDir);
-            for (const [name, type] of files) {
-                if (type === vscode.FileType.File && name.startsWith('test-')) {
-                    const fileUri = vscode.Uri.joinPath(steeringDir, name);
-                    await vscode.workspace.fs.delete(fileUri);
-                }
-            }
-        } catch (error) {
-            // Directory might not exist
-        }
+        // Clean up test files after each test
+        await cleanupTestFiles();
     });
 
     test('End-to-end: Browse documents', async () => {
