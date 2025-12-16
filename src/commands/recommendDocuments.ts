@@ -3,6 +3,7 @@ import { RecommendationService } from '../services/RecommendationService';
 import { RecommendationPanel } from '../providers/RecommendationPanel';
 import { ScoredDocument, RecommendationError, RecommendationErrorCode, DocumentMetadata, InstalledDocument } from '../models/types';
 import { DocumentService } from '../services/DocumentService';
+import { SteeringDocsTreeProvider } from '../providers/SteeringDocsTreeProvider';
 
 /**
  * Quick Pick item for a recommendation
@@ -18,12 +19,14 @@ interface RecommendationQuickPickItem extends vscode.QuickPickItem {
  * @param recommendationService Recommendation service instance
  * @param _recommendationPanel Recommendation panel instance (unused - kept for compatibility)
  * @param documentService Document service instance for bulk activation
+ * @param treeProvider Tree provider instance for refreshing the tree view
  */
 export async function recommendDocuments(
     _context: vscode.ExtensionContext,
     recommendationService: RecommendationService,
     _recommendationPanel: RecommendationPanel,
-    documentService: DocumentService
+    documentService: DocumentService,
+    treeProvider: SteeringDocsTreeProvider
 ): Promise<void> {
     console.log('[RECOMMEND] Command triggered!');
     await vscode.window.withProgress(
@@ -88,15 +91,24 @@ export async function recommendDocuments(
 
                 // Get installed documents for state indicators
                 const installedDocs = await documentService.getInstalledDocuments();
+                console.log('[RECOMMEND] Currently installed:', installedDocs.length, 'documents');
 
                 const selectedDocs = await showRecommendationQuickPick(recommendations);
 
                 if (!selectedDocs || selectedDocs.length === 0) {
+                    console.log('[RECOMMEND] No documents selected or user cancelled');
                     return; // User cancelled
                 }
 
+                console.log('[RECOMMEND] Installing', selectedDocs.length, 'documents');
+
                 // Step 3: Bulk activate all selected documents with smart defaults
                 await bulkActivateDocuments(selectedDocs, documentService, installedDocs);
+
+                console.log('[RECOMMEND] Installation complete, refreshing tree view');
+
+                // Step 4: Refresh tree view to show newly activated documents
+                treeProvider.refresh();
 
             } catch (error) {
                 const message = error instanceof Error ? error.message : 'Unknown error';
@@ -128,7 +140,7 @@ async function showRecommendationQuickPick(
     const quickPick = vscode.window.createQuickPick<RecommendationQuickPickItem>();
     quickPick.canSelectMany = true;
     quickPick.title = '✨ Recommended Steering Documents';
-    quickPick.placeholder = 'Tab to select multiple, Enter to activate selected documents';
+    quickPick.placeholder = 'Click or use Space to select, then press Enter to install';
 
     // Build items - clean and simple
     const items = recommendations.map(scored => {
@@ -149,13 +161,26 @@ async function showRecommendationQuickPick(
     quickPick.items = items;
 
     return new Promise((resolve) => {
+        let resolved = false;
+
         quickPick.onDidAccept(() => {
+            if (resolved) {
+                return;
+            }
+            resolved = true;
             const selected = quickPick.selectedItems.map(item => item.scoredDocument!);
+            console.log('[RECOMMEND] User accepted selection:', selected.length, 'documents');
+            quickPick.hide();
             quickPick.dispose();
             resolve(selected.length > 0 ? selected : undefined);
         });
 
         quickPick.onDidHide(() => {
+            if (resolved) {
+                return;
+            }
+            resolved = true;
+            console.log('[RECOMMEND] QuickPick hidden without selection');
             quickPick.dispose();
             resolve(undefined);
         });

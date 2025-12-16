@@ -125,13 +125,23 @@ export function registerCommands(
     )
   );
 
+  // Toggle active state command
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "steeringDocs.toggleActive",
+      async (documentPath: string) => {
+        await handleToggleActive(documentService, treeProvider, documentPath);
+      }
+    )
+  );
+
   // Recommend documents command
   if (recommendationService && recommendationPanel) {
     console.log('[Commands] Registering steeringDocs.recommend command');
     context.subscriptions.push(
       vscode.commands.registerCommand("steeringDocs.recommend", async () => {
         console.log('[Commands] steeringDocs.recommend command invoked');
-        await recommendDocuments(context, recommendationService, recommendationPanel, documentService);
+        await recommendDocuments(context, recommendationService, recommendationPanel, documentService, treeProvider);
       })
     );
   } else {
@@ -485,6 +495,44 @@ async function handleShowActiveOnly(
     ? "Showing only active documents"
     : "Showing all documents";
   vscode.window.showInformationMessage(message);
+}
+
+/**
+ * Handle toggle active state command - toggle between "always" and "manual" inclusion modes
+ */
+async function handleToggleActive(
+  documentService: DocumentService,
+  treeProvider: SteeringDocsTreeProvider,
+  documentPath: string
+): Promise<void> {
+  try {
+    if (!documentPath) {
+      vscode.window.showErrorMessage("No document path provided");
+      return;
+    }
+
+    // Get current inclusion mode
+    const currentMode = await documentService.getInclusionMode(documentPath);
+    
+    // Toggle between "always" and "manual"
+    const newMode = currentMode === "always" ? "manual" : "always";
+
+    // Set the new inclusion mode
+    await documentService.setInclusionMode(documentPath, newMode);
+
+    // Refresh tree view to reflect the new state
+    treeProvider.refresh();
+  } catch (error) {
+    if (error instanceof ExtensionError) {
+      vscode.window.showErrorMessage(error.message);
+    } else {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      vscode.window.showErrorMessage(`Failed to toggle active state: ${message}`);
+    }
+    
+    // Refresh tree view to revert UI state on error
+    treeProvider.refresh();
+  }
 }
 
 /**

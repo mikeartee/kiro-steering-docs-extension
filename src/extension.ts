@@ -18,9 +18,10 @@ export function activate(context: vscode.ExtensionContext) {
     const config = vscode.workspace.getConfiguration('steeringDocs');
     const repository = config.get<string>('repository', 'mikeartee/kiro-steering-docs');
     const branch = config.get<string>('branch', 'main');
+    const githubToken = config.get<string>('githubToken', '');
 
     // Initialize services
-    const githubClient = new GitHubClient(repository, branch);
+    const githubClient = new GitHubClient(repository, branch, githubToken || undefined);
     const cacheManager = new CacheManager(context.globalState);
     const frontmatterService = new FrontmatterService();
     const documentService = new DocumentService(githubClient, cacheManager, frontmatterService);

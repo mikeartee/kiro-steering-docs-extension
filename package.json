@@ -98,6 +98,12 @@
         "icon": "$(circle-outline)"
       },
       {
+        "command": "steeringDocs.toggleActive",
+        "title": "Toggle Active State",
+        "category": "Steering Docs",
+        "icon": "$(eye)"
+      },
+      {
         "command": "steeringDocs.recommend",
         "title": "Get Recommendations",
         "category": "Steering Docs",
@@ -192,6 +198,11 @@
           "type": "boolean",
           "default": true,
           "description": "Automatically check for updates on activation"
+        },
+        "steeringDocs.githubToken": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub personal access token for increased API rate limits (5000/hour vs 60/hour)"
         }
       }
     }
@@ -208,6 +219,7 @@
     "@types/glob": "^8.1.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^18.x",
+    "@types/sinon": "^21.0.0",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
@@ -217,10 +229,11 @@
     "glob": "^8.1.0",
     "mocha": "^11.7.4",
     "sharp": "^0.34.5",
+    "sinon": "^21.0.0",
     "typescript": "^5.1.0"
   },
   "dependencies": {
     "@types/js-yaml": "^4.0.5",
-    "js-yaml": "^4.1.0"
+    "js-yaml": "^4.1.1"
   }
 }

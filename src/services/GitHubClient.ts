@@ -13,7 +13,8 @@ export class GitHubClient {
 
     constructor(
         private readonly repository: string,
-        private readonly branch: string = 'main'
+        private readonly branch: string = 'main',
+        private readonly token?: string
     ) {}
 
     /**
@@ -164,11 +165,17 @@ export class GitHubClient {
      */
     private makeRequest(url: string): Promise<any> {
         return new Promise((resolve, reject) => {
+            const headers: Record<string, string> = {
+                'User-Agent': 'VSCode-Steering-Docs-Browser',
+                'Accept': 'application/vnd.github.v3+json'
+            };
+
+            if (this.token) {
+                headers['Authorization'] = `Bearer ${this.token}`;
+            }
+
             const req = https.get(url, {
-                headers: {
-                    'User-Agent': 'VSCode-Steering-Docs-Browser',
-                    'Accept': 'application/vnd.github.v3+json'
-                },
+                headers,
                 timeout: this.timeout
             }, (res) => {
                 let data = '';
@@ -220,10 +227,16 @@ export class GitHubClient {
      */
     private makeRawRequest(url: string): Promise<string> {
         return new Promise((resolve, reject) => {
+            const headers: Record<string, string> = {
+                'User-Agent': 'VSCode-Steering-Docs-Browser'
+            };
+
+            if (this.token) {
+                headers['Authorization'] = `Bearer ${this.token}`;
+            }
+
             const req = https.get(url, {
-                headers: {
-                    'User-Agent': 'VSCode-Steering-Docs-Browser'
-                },
+                headers,
                 timeout: this.timeout
             }, (res) => {
                 let data = '';
