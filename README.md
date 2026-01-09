@@ -1,6 +1,6 @@
 # Kiro Steering Documents Browser
 
-A VS Code extension that enables browsing, previewing, and installing Kiro steering documents from a GitHub repository. Discover and adopt community-created steering rules and conventions to enhance your Kiro AI assistant experience.
+A Kiro IDE extension for browsing, previewing, and installing steering documents from a GitHub repository. Discover and adopt community-created steering rules and conventions to guide Kiro's code generation.
 
 ## Features
 
@@ -19,15 +19,14 @@ A VS Code extension that enables browsing, previewing, and installing Kiro steer
 
 ## Requirements
 
-- **Kiro IDE**: This extension is designed specifically for Kiro IDE and requires Kiro to be installed
-- **VS Code 1.80.0 or higher**: Compatible with VS Code and Kiro IDE
+- **Kiro IDE**: This extension requires Kiro IDE (not compatible with VS Code or other editors)
 
 ## Getting Started
 
 ### Installation
 
-1. Install the extension from your extension marketplace
-2. Open a workspace with Kiro installed
+1. Install the extension from the Kiro extension marketplace
+2. Open a workspace in Kiro
 3. Find the "Steering Documents" view in the Kiro sidebar (left panel)
 
 ### Basic Usage
@@ -37,6 +36,31 @@ A VS Code extension that enables browsing, previewing, and installing Kiro steer
 2. **Select documents** from the Quick Pick (use Tab to multi-select)
 3. **Press Enter** - documents activate instantly with smart defaults
 4. Done! Documents are now active in your workspace
+
+#### When to Use Recommendations
+
+Recommendations analyze your `package.json` and project structure to suggest relevant documents. For best results, use them **after your project dependencies are set up**.
+
+**With Kiro Specs (Requirements → Design → Tasks):**
+
+1. Complete your **Requirements** document
+2. Complete your **Design** document (defines your tech stack)
+3. Set up your project: `npm init` and install main dependencies
+4. **Click recommendations** ← sweet spot
+5. Install the suggested steering docs
+6. Execute your Tasks with guidance in place
+
+**For existing projects:** Just click recommendations - your dependencies are already there.
+
+**No package.json yet?** You can still browse all documents in the tree view and install manually. Run recommendations again after setting up your project to get personalized suggestions.
+
+**What gets analyzed:**
+- `package.json` dependencies and devDependencies
+- `tsconfig.json` presence (TypeScript detection)
+- Folder structure (`components/`, `routes/`, `api/`)
+- Test file patterns (`*.test.ts`, `*.spec.js`)
+
+**Note:** In multi-root workspaces, only the first workspace folder is analyzed.
 
 #### Manual Browse & Install
 1. **Browse Documents**: Expand categories in the tree view to see available steering documents
