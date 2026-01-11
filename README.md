@@ -220,7 +220,7 @@ inclusion: "always"
 - Check your internet connection
 - Verify the GitHub repository is accessible
 - Try clicking the Refresh button
-- Check VS Code's Output panel (View > Output) and select "Kiro Steering Documents" for error details
+- Check the Output panel (View > Output) and select "Kiro Steering Documents" for error details
 
 ### Installation Fails
 
@@ -239,7 +239,7 @@ inclusion: "always"
 **Solutions**:
 - Click "Check for Updates" in the tree view toolbar
 - Verify `steeringDocs.autoCheckUpdates` is enabled in settings
-- Clear the cache by reloading VS Code
+- Clear the cache by reloading Kiro
 - Check that installed documents have valid version frontmatter
 
 ### Inclusion Mode Not Working
@@ -248,7 +248,7 @@ inclusion: "always"
 
 **Solutions**:
 - Verify the frontmatter includes `inclusion: "always"`
-- Reload VS Code to ensure Kiro picks up the changes
+- Reload Kiro to ensure changes are picked up
 - Check the document is in `.kiro/steering/` directory
 - Ensure the document has valid YAML frontmatter
 
@@ -297,7 +297,7 @@ npm run compile
 npm test
 
 # Launch extension in debug mode
-# Press F5 in VS Code
+# Press F5 in Kiro
 ```
 
 ## Support
@@ -306,7 +306,7 @@ For issues, feature requests, or contributions:
 
 - **GitHub Repository**: [mikeartee/kiro-steering-docs-extension](https://github.com/mikeartee/kiro-steering-docs-extension)
 - **Report Issues**: Check existing issues before creating new ones
-- **Include Details**: VS Code version, extension version, and error messages help us help you
+- **Include Details**: Kiro version, extension version, and error messages help us help you
 
 ## License
 
@@ -315,6 +315,11 @@ MIT License - see [LICENSE](LICENSE) file for details
 Copyright (c) 2025 Michael Rewiri-Thorsen
 
 ## Changelog
+
+### 0.2.2 (2025-01-11)
+
+- **Changed**: Updated documentation to clarify Kiro IDE exclusivity
+- **Improved**: Cleaner README with consistent Kiro branding
 
 ### 0.2.0 (2025-01-29)
 
