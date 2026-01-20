@@ -1,5 +1,14 @@
 import * as https from 'https';
+
 import { GitHubContent, ErrorCode, ExtensionError } from '../models/types';
+
+import type { IncomingMessage } from 'http';
+
+/**
+ * Function type that asynchronously retrieves the current token
+ * Enables dynamic token updates without service recreation
+ */
+export type TokenProvider = () => Promise<string | undefined>;
 
 /**
  * Client for interacting with the GitHub API
@@ -14,7 +23,7 @@ export class GitHubClient {
     constructor(
         private readonly repository: string,
         private readonly branch: string = 'main',
-        private readonly token?: string
+        private readonly getToken: TokenProvider
     ) {}
 
     /**
@@ -163,15 +172,19 @@ export class GitHubClient {
      * @param url Full URL to request
      * @returns Parsed JSON response
      */
-    private makeRequest(url: string): Promise<any> {
+    private async makeRequest(url: string): Promise<unknown> {
+        // Get token dynamically for each request
+        const token = await this.getToken();
+
         return new Promise((resolve, reject) => {
             const headers: Record<string, string> = {
                 'User-Agent': 'VSCode-Steering-Docs-Browser',
                 'Accept': 'application/vnd.github.v3+json'
             };
 
-            if (this.token) {
-                headers['Authorization'] = `Bearer ${this.token}`;
+            // Only add Authorization header if token is available
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
 
             const req = https.get(url, {
@@ -196,7 +209,7 @@ export class GitHubClient {
                             ));
                         }
                     } else {
-                        reject(this.handleHttpError(res.statusCode || 0, data));
+                        reject(this.handleHttpError(res.statusCode || 0, data, res));
                     }
                 });
             });
@@ -225,14 +238,18 @@ export class GitHubClient {
      * @param url Full URL to request
      * @returns Raw content as string
      */
-    private makeRawRequest(url: string): Promise<string> {
+    private async makeRawRequest(url: string): Promise<string> {
+        // Get token dynamically for each request
+        const token = await this.getToken();
+
         return new Promise((resolve, reject) => {
             const headers: Record<string, string> = {
                 'User-Agent': 'VSCode-Steering-Docs-Browser'
             };
 
-            if (this.token) {
-                headers['Authorization'] = `Bearer ${this.token}`;
+            // Only add Authorization header if token is available
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
             }
 
             const req = https.get(url, {
@@ -249,7 +266,7 @@ export class GitHubClient {
                     if (res.statusCode === 200) {
                         resolve(data);
                     } else {
-                        reject(this.handleHttpError(res.statusCode || 0, data));
+                        reject(this.handleHttpError(res.statusCode || 0, data, res));
                     }
                 });
             });
@@ -274,24 +291,52 @@ export class GitHubClient {
     }
 
     /**
-     * Handle HTTP error responses
+     * Handle HTTP error responses with proper error classification
      * @param statusCode HTTP status code
      * @param responseBody Response body
+     * @param response The HTTP response object for header inspection
      * @returns ExtensionError with appropriate message
      */
-    private handleHttpError(statusCode: number, responseBody: string): ExtensionError {
+    private handleHttpError(statusCode: number, responseBody: string, response?: IncomingMessage): ExtensionError {
         switch (statusCode) {
+            case 401:
+                // 401 Unauthorized: Invalid or expired token (Req 7.2)
+                return new ExtensionError(
+                    'GitHub token is invalid or has expired. Please generate a new token from GitHub Settings > Developer settings > Personal access tokens.',
+                    ErrorCode.NETWORK_ERROR,
+                    false
+                );
+            case 403: {
+                // 403 Forbidden: Check X-RateLimit-Remaining to distinguish rate limit vs insufficient permissions (Req 7.3, 7.4)
+                const rateLimitRemaining = response?.headers['x-ratelimit-remaining'];
+                const rateLimitReset = response?.headers['x-ratelimit-reset'];
+                
+                if (rateLimitRemaining === '0') {
+                    // Rate limited
+                    let resetMessage = '';
+                    if (rateLimitReset) {
+                        const resetDate = new Date(Number(rateLimitReset) * 1000);
+                        resetMessage = ` Your limit will reset at ${resetDate.toLocaleTimeString()}.`;
+                    }
+                    return new ExtensionError(
+                        `GitHub API rate limit exceeded.${resetMessage} Consider using a personal access token for higher limits (5000 requests/hour).`,
+                        ErrorCode.NETWORK_ERROR,
+                        true
+                    );
+                } else {
+                    // Insufficient permissions
+                    return new ExtensionError(
+                        'Access forbidden. Your token may lack required permissions. For private repositories, ensure your token has the "repo" scope.',
+                        ErrorCode.NETWORK_ERROR,
+                        false
+                    );
+                }
+            }
             case 404:
                 return new ExtensionError(
                     'Resource not found on GitHub',
                     ErrorCode.NOT_FOUND,
                     false
-                );
-            case 403:
-                return new ExtensionError(
-                    'GitHub API rate limit exceeded or access forbidden',
-                    ErrorCode.NETWORK_ERROR,
-                    true
                 );
             case 500:
             case 502:

@@ -330,3 +330,74 @@ export interface MergeOptions {
   preserveExisting: boolean;
   overwriteTags: boolean;
 }
+
+// ============================================================================
+// Token Management Types (Enterprise Secure Token Storage)
+// ============================================================================
+
+/**
+ * Supported GitHub token types
+ */
+export enum TokenType {
+    FINE_GRAINED = 'fine-grained',
+    CLASSIC = 'classic',
+    OAUTH = 'oauth',
+    GITHUB_ACTIONS = 'github-actions',
+    UNKNOWN = 'unknown'
+}
+
+/**
+ * Result of token format validation
+ */
+export interface TokenValidationResult {
+    valid: boolean;
+    error?: string;
+    tokenType?: TokenType;
+}
+
+/**
+ * GitHub API rate limit information
+ */
+export interface RateLimitInfo {
+    limit: number;
+    remaining: number;
+    reset: Date;
+}
+
+/**
+ * Information about a configured token
+ */
+export interface TokenInfo {
+    hasToken: boolean;
+    tokenType?: TokenType;
+    isValid?: boolean;
+    username?: string;
+    error?: string;
+    rateLimit?: RateLimitInfo;
+    source?: 'secretStorage' | 'settings' | 'none';
+}
+
+/**
+ * Token format patterns for validation
+ * Maps each token type to its expected regex pattern
+ */
+export const TOKEN_PATTERNS: Record<TokenType, RegExp> = {
+    [TokenType.FINE_GRAINED]: /^github_pat_[a-zA-Z0-9]{22}_[a-zA-Z0-9]{59}$/,
+    [TokenType.CLASSIC]: /^ghp_[a-zA-Z0-9]{36}$/,
+    [TokenType.OAUTH]: /^gho_[a-zA-Z0-9]{36}$/,
+    [TokenType.GITHUB_ACTIONS]: /^ghs_[a-zA-Z0-9]{36}$/,
+    [TokenType.UNKNOWN]: /^[a-f0-9]{40}$/ // Legacy 40-char hex tokens
+};
+
+/**
+ * Error codes for token operations
+ */
+export enum TokenErrorCode {
+    INVALID_FORMAT = 'INVALID_FORMAT',
+    STORAGE_FAILED = 'STORAGE_FAILED',
+    VALIDATION_FAILED = 'VALIDATION_FAILED',
+    NETWORK_ERROR = 'NETWORK_ERROR',
+    UNAUTHORIZED = 'UNAUTHORIZED',
+    RATE_LIMITED = 'RATE_LIMITED',
+    INSUFFICIENT_SCOPE = 'INSUFFICIENT_SCOPE'
+}

@@ -2,10 +2,13 @@ import * as assert from 'assert';
 import { GitHubClient } from './GitHubClient';
 import { ErrorCode, ExtensionError } from '../models/types';
 
+// Mock token provider for tests
+const mockTokenProvider = async (): Promise<string | undefined> => undefined;
+
 suite('GitHubClient Tests', () => {
     
     test('getRepositoryContents should return array of contents', async () => {
-        const client = new GitHubClient('test/repo', 'main');
+        const client = new GitHubClient('test/repo', 'main', mockTokenProvider);
         
         // This test validates the structure but requires actual network call
         // In a real scenario, we would mock the https module
@@ -19,7 +22,7 @@ suite('GitHubClient Tests', () => {
     });
 
     test('getFileContent should decode base64 content', async () => {
-        const client = new GitHubClient('test/repo', 'main');
+        const client = new GitHubClient('test/repo', 'main', mockTokenProvider);
         
         try {
             await client.getFileContent('test.md');
@@ -30,7 +33,7 @@ suite('GitHubClient Tests', () => {
     });
 
     test('getRawFileContent should fetch raw content', async () => {
-        const client = new GitHubClient('test/repo', 'main');
+        const client = new GitHubClient('test/repo', 'main', mockTokenProvider);
         
         try {
             await client.getRawFileContent('test.md');
@@ -41,7 +44,7 @@ suite('GitHubClient Tests', () => {
     });
 
     test('Error handling for 404 responses', async () => {
-        const client = new GitHubClient('test/nonexistent', 'main');
+        const client = new GitHubClient('test/nonexistent', 'main', mockTokenProvider);
         
         try {
             await client.getRepositoryContents('nonexistent');
@@ -55,7 +58,7 @@ suite('GitHubClient Tests', () => {
     });
 
     test('Timeout handling', async () => {
-        const client = new GitHubClient('test/repo', 'main');
+        const client = new GitHubClient('test/repo', 'main', mockTokenProvider);
         
         // This test validates timeout behavior
         // In production, timeout is set to 30 seconds

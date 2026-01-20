@@ -2,6 +2,42 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
+## [0.3.0] - 2025-01-XX
+
+### Added
+
+- **Secure Token Storage**: GitHub tokens are now stored securely using the SecretStorage API
+  - Tokens are encrypted using the OS credential manager (Windows Credential Manager, macOS Keychain, Linux Secret Service)
+  - Tokens are never synced to the cloud
+  - Compliant with enterprise security requirements (ISO 27001/42001)
+- **Token Management Commands**:
+  - `Steering Docs: Set GitHub Token` - Securely store your GitHub Personal Access Token
+  - `Steering Docs: Clear GitHub Token` - Remove your stored token from secure storage
+  - `Steering Docs: Check Token Status` - Verify token configuration and test validity against GitHub API
+- **Audit Logging**: Security-relevant token operations are logged to the "Steering Docs Security Audit" output channel
+  - Logs include ISO 8601 timestamps and operation status
+  - Token values are never included in logs
+- **Automatic Migration**: Tokens stored in the legacy `steeringDocs.githubToken` setting are automatically migrated to secure storage
+- **Token Format Validation**: Validates GitHub token formats (ghp_*, github_pat_*, gho_*, ghs_*, 40-char hex) before storage
+
+### Changed
+
+- **Dynamic Token Updates**: Token changes take effect immediately without requiring IDE restart
+- **Improved Error Messages**: Clear, actionable error messages for authentication failures (401/403)
+
+### Deprecated
+
+- The `steeringDocs.githubToken` setting is now deprecated
+  - Tokens in settings.json are stored in plaintext and may be synced to the cloud
+  - Use the "Steering Docs: Set GitHub Token" command instead
+  - Setting now has `ignoreSync: true` to prevent accidental cloud sync
+
+### Security
+
+- Addresses enterprise security requirements for credential storage
+- Tokens are no longer visible to other extensions
+- Audit trail for compliance reporting
+
 ## [0.2.0] - 2025-01-29
 
 ### Added

@@ -13,9 +13,12 @@ suite('DocumentService Tests', () => {
     let mockCacheManager: CacheManager;
     let frontmatterService: FrontmatterService;
 
+    // Mock token provider for tests
+    const mockTokenProvider = async (): Promise<string | undefined> => undefined;
+
     setup(() => {
         // Create mock instances
-        mockGitHubClient = new GitHubClient('test/repo', 'main');
+        mockGitHubClient = new GitHubClient('test/repo', 'main', mockTokenProvider);
         
         // Create a mock memento for cache manager
         const mockMemento: vscode.Memento = {

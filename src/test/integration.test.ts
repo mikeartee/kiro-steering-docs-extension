@@ -83,7 +83,7 @@ This is a test document for integration testing.
     });
 
     constructor() {
-        super('test/repo', 'main');
+        super('test/repo', 'main', async () => undefined);
     }
 
     async getRepositoryContents(path: string): Promise<any[]> {

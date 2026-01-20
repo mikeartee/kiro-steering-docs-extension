@@ -108,6 +108,21 @@
         "title": "Get Recommendations",
         "category": "Steering Docs",
         "icon": "$(sparkle)"
+      },
+      {
+        "command": "steeringDocs.setToken",
+        "title": "Set GitHub Token",
+        "category": "Steering Docs"
+      },
+      {
+        "command": "steeringDocs.clearToken",
+        "title": "Clear GitHub Token",
+        "category": "Steering Docs"
+      },
+      {
+        "command": "steeringDocs.checkTokenStatus",
+        "title": "Check Token Status",
+        "category": "Steering Docs"
       }
     ],
     "menus": {
@@ -202,7 +217,10 @@
         "steeringDocs.githubToken": {
           "type": "string",
           "default": "",
-          "description": "GitHub personal access token for increased API rate limits (5000/hour vs 60/hour)"
+          "description": "DEPRECATED: Use 'Steering Docs: Set GitHub Token' command instead.",
+          "deprecationMessage": "This setting is deprecated. Use the 'Steering Docs: Set GitHub Token' command for secure storage. Your token will be migrated automatically.",
+          "scope": "application",
+          "ignoreSync": true
         }
       }
     }

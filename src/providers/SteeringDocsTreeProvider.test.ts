@@ -10,9 +10,12 @@ suite('SteeringDocsTreeProvider Tests', () => {
     let treeProvider: SteeringDocsTreeProvider;
     let documentService: DocumentService;
 
+    // Mock token provider for tests
+    const mockTokenProvider = async (): Promise<string | undefined> => undefined;
+
     setup(() => {
         // Create mock instances
-        const mockGitHubClient = new GitHubClient('test/repo', 'main');
+        const mockGitHubClient = new GitHubClient('test/repo', 'main', mockTokenProvider);
         
         // Create a mock memento for cache manager
         const mockMemento: vscode.Memento = {

@@ -105,6 +105,8 @@ Documents are automatically loaded when files matching a specific pattern are in
 
 Access these commands from the Command Palette (Ctrl+Shift+P / Cmd+Shift+P):
 
+### Document Management
+
 - **Get Recommendations** (✨): AI-powered document suggestions with bulk activation
 - **Toggle Document**: Simple on/off control for activating or deactivating documents
 - **Refresh**: Reload the document list from GitHub
@@ -115,6 +117,12 @@ Access these commands from the Command Palette (Ctrl+Shift+P / Cmd+Shift+P):
 - **Quick Load (Install & Activate)**: Install a document with "always" inclusion mode
 - **Update Document**: Update an installed document to the latest version
 - **Set Inclusion: Always/Manual/File Match**: Change how a document is loaded
+
+### Token Management
+
+- **Steering Docs: Set GitHub Token**: Securely store your GitHub Personal Access Token using the OS credential manager
+- **Steering Docs: Clear GitHub Token**: Remove your stored token from secure storage
+- **Steering Docs: Check Token Status**: Verify your token configuration and test validity against GitHub API
 
 ## Configuration
 
@@ -135,6 +143,43 @@ Configure the extension through Kiro Code settings (File > Preferences > Setting
   "steeringDocs.autoCheckUpdates": true
 }
 ```
+
+## Token Management
+
+GitHub API has rate limits that affect how many documents you can browse and install:
+
+| Authentication | Rate Limit | Use Case |
+|---------------|------------|----------|
+| Anonymous (no token) | 60 requests/hour | Public repos, light usage |
+| Personal Access Token | 5,000 requests/hour | Private repos, heavy usage |
+
+### Setting Up a Token
+
+1. **Generate a token** at [GitHub Settings → Developer settings → Personal access tokens](https://github.com/settings/tokens)
+2. **Select scopes**:
+   - For public repos: No scopes required (read-only access is default)
+   - For private repos: Select the `repo` scope
+3. **Run the command**: `Steering Docs: Set GitHub Token` from the Command Palette
+4. **Paste your token** in the secure input box (input is masked)
+
+Your token is stored securely using the operating system's credential manager (Windows Credential Manager, macOS Keychain, or Linux Secret Service).
+
+### Token Commands
+
+| Command | Description |
+|---------|-------------|
+| `Steering Docs: Set GitHub Token` | Securely store your GitHub token |
+| `Steering Docs: Clear GitHub Token` | Remove your stored token |
+| `Steering Docs: Check Token Status` | Verify token configuration and validity |
+
+### Security Features
+
+- **Encrypted Storage**: Tokens are stored using the SecretStorage API, which uses your OS credential manager
+- **No Settings Sync**: Tokens are never synced to the cloud
+- **Audit Logging**: Token operations are logged to the "Steering Docs Security Audit" output channel
+- **Automatic Migration**: If you previously stored a token in settings.json, it will be automatically migrated to secure storage
+
+> **Note**: The legacy `steeringDocs.githubToken` setting is deprecated. Please use the "Set GitHub Token" command instead for secure storage.
 
 ## Tree View Icons
 
@@ -269,8 +314,19 @@ inclusion: "always"
 **Solutions**:
 - GitHub API allows 60 requests/hour for unauthenticated users
 - Wait for the rate limit to reset (check error message for reset time)
-- Consider configuring a GitHub personal access token (future feature)
+- Configure a GitHub Personal Access Token using `Steering Docs: Set GitHub Token` command
+- Use `Steering Docs: Check Token Status` to verify your token is working
 - Use cached data while waiting for rate limit reset
+
+### Token Issues
+
+**Problem**: Token not working or missing after IDE update
+
+**Solutions**:
+- Run `Steering Docs: Check Token Status` to verify token configuration
+- If token is missing, re-enter it using `Steering Docs: Set GitHub Token`
+- Check the "Steering Docs Security Audit" output channel for error details
+- Note: VS Code SecretStorage has a known issue ([#193301](https://github.com/microsoft/vscode/issues/193301)) that can cause token loss after IDE updates - simply re-enter your token if this occurs
 
 ## Contributing
 
