@@ -372,6 +372,30 @@ Copyright (c) 2025 Michael Rewiri-Thorsen
 
 ## Changelog
 
+### 0.3.3 (2025-01-21)
+
+- **Fixed**: Document update menu not appearing (restored `document-update-available` context value)
+
+### 0.3.2 (2025-01-21)
+
+- **Fixed**: VSIX packaging to include `node_modules` dependencies
+- **Fixed**: Extension activation failure due to missing `js-yaml` module
+
+### 0.3.1 (2025-01-21)
+
+- **Changed**: Improved `.gitignore` to exclude user-specific settings
+- **Fixed**: Removed sensitive files from git tracking
+
+### 0.3.0 (2025-01-21)
+
+- **Feature**: Secure token storage using SecretStorage API (OS credential manager)
+- **Feature**: Token management commands (Set, Clear, Check Status)
+- **Feature**: Audit logging for security-relevant token operations
+- **Feature**: Automatic migration from legacy settings to secure storage
+- **Feature**: Token format validation before storage
+- **Changed**: Dynamic token updates without IDE restart
+- **Deprecated**: `steeringDocs.githubToken` setting (use commands instead)
+
 ### 0.2.2 (2025-01-11)
 
 - **Changed**: Updated documentation to clarify Kiro IDE exclusivity

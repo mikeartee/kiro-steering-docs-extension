@@ -2,7 +2,32 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
-## [0.3.0] - 2025-01-XX
+## [0.3.3] - 2025-01-21
+
+### Fixed
+
+- Fixed document update menu not appearing (restored `document-update-available` context value)
+- Update command now correctly shows in context menu for documents with available updates
+
+## [0.3.2] - 2025-01-21
+
+### Fixed
+
+- Fixed VSIX packaging to include `node_modules` dependencies
+- Extension now activates correctly (was failing due to missing `js-yaml` module)
+
+## [0.3.1] - 2025-01-21
+
+### Changed
+
+- Improved `.gitignore` to exclude user-specific settings (`.claude/`, `.kiro/settings/`)
+- Updated `.vscodeignore` to exclude sensitive files from VSIX package
+
+### Fixed
+
+- Removed sensitive files from git tracking
+
+## [0.3.0] - 2025-01-21
 
 ### Added
 
