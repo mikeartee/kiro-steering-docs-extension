@@ -29,3 +29,7 @@ npm-debug.log*
 .env
 .env.local
 
+# User-specific settings (not for public repo)
+.claude/
+.kiro/settings/
+
