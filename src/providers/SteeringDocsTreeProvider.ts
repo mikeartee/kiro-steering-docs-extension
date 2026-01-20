@@ -535,13 +535,16 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
      * Get context value for command enablement
      */
     private getDocumentContextValue(doc: DocumentTreeItem): string {
-        // Simplified context values for toggle functionality
         if (doc.installed) {
-            // Document is installed - show as "on" state
+            // Check if update is available
+            if (doc.hasUpdate) {
+                return 'document-update-available';
+            }
+            // Document is installed and up to date
             return 'document-installed';
         } else {
-            // Document is not installed - show as "off" state
-            return 'document-not-installed';
+            // Document is not installed - available for installation
+            return 'document-available';
         }
     }
 
