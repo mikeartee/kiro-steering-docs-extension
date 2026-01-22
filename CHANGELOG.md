@@ -2,6 +2,26 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
+## [0.4.0] - 2025-01-23
+
+### Added
+
+- **Actionable Update Notifications**: Notifications now show which files have updates (e.g., "2 updates available: file1.md, file2.md")
+  - "View Updates" button opens Quick Pick to select which files to update
+  - Manual "Check for Updates" command offers "Update All" or "Select Updates" options
+- **Visual Update Indicators**: Orange icon indicates a document has an update available
+  - Orange takes priority over inclusion mode colors when update is available
+  - Description shows version diff when update available (e.g., "1.0.0 -> 1.1.0")
+
+### Fixed
+
+- **Skip Files Without SHA**: Files without SHA in frontmatter are now skipped during update detection
+  - Prevents false "updates available" notifications for local-only files
+
+### Changed
+
+- Removed emojis from tooltips (not supported in Kiro tree view)
+
 ## [0.3.3] - 2025-01-21
 
 ### Fixed

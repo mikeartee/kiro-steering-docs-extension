@@ -189,8 +189,11 @@ The tree view uses icons to indicate document status and organization:
 - 🟢 **Always Active**: Green filled circle - inclusion mode is "always"
 - 🔵 **Manual**: Blue filled circle - inclusion mode is "manual"
 - 🟡 **File Match**: Yellow filled circle - inclusion mode is "fileMatch"
+- 🟠 **Update Available**: Orange filled circle - an update is available (takes priority over inclusion mode colors)
 - 📁 **Category**: Folder icon - document category grouping
 - 📂 **Folder**: Folder icon - nested folder within a category (collapsible)
+
+When an update is available, the document description shows the version change (e.g., "1.0.0 -> 1.1.0").
 
 ## Examples
 
@@ -371,6 +374,15 @@ MIT License - see [LICENSE](LICENSE) file for details
 Copyright (c) 2025 Michael Rewiri-Thorsen
 
 ## Changelog
+
+### 0.4.0 (2025-01-23)
+
+- **Feature**: Actionable update notifications showing which files have updates
+- **Feature**: "View Updates" button to select which files to update
+- **Feature**: Orange icon indicates update available (takes priority over inclusion mode colors)
+- **Feature**: Version diff shown in description when update available (e.g., "1.0.0 -> 1.1.0")
+- **Fixed**: Files without SHA in frontmatter are now skipped during update detection
+- **Changed**: Removed emojis from tooltips (not supported in Kiro tree view)
 
 ### 0.3.3 (2025-01-21)
 
