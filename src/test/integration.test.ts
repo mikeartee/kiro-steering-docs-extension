@@ -147,28 +147,14 @@ suite('Integration Tests', () => {
     }
 
     /**
-     * Recursively clean up test directories and files
+     * Clean up entire steering directory for fresh test state
      */
     async function cleanupTestFiles(): Promise<void> {
         try {
-            // Delete the entire test directory structure
-            const testDir = vscode.Uri.joinPath(steeringDir, 'documents', 'test');
-            await vscode.workspace.fs.delete(testDir, { recursive: true });
-        } catch (error) {
-            // Directory might not exist
-        }
-
-        try {
-            // Also clean up any root-level test files
-            const files = await vscode.workspace.fs.readDirectory(steeringDir);
-            for (const [name, type] of files) {
-                if (type === vscode.FileType.File && name.startsWith('test-')) {
-                    const fileUri = vscode.Uri.joinPath(steeringDir, name);
-                    await vscode.workspace.fs.delete(fileUri);
-                }
-            }
-        } catch (error) {
-            // Directory might not exist
+            // Delete the entire .kiro/steering directory to ensure clean state
+            await vscode.workspace.fs.delete(steeringDir, { recursive: true });
+        } catch {
+            // Directory might not exist, which is fine
         }
     }
 
