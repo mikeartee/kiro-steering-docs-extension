@@ -352,7 +352,7 @@ suite('SteeringDocsTreeProvider Tests', () => {
         // Verify tree item properties
         assert.strictEqual(treeItem.label, 'python-formatting.md', 
             'Should have correct label');
-        assert.strictEqual(treeItem.contextValue, 'document-not-installed', 
+        assert.strictEqual(treeItem.contextValue, 'document-available',
             'Should have correct context value for non-installed');
         assert.ok(treeItem.command, 'Should have toggle command');
         assert.strictEqual(treeItem.command.command, 'steeringDocs.toggle', 

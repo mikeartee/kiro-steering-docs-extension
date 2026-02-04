@@ -30,6 +30,5 @@ jobs:
 
       - name: Run tests
         run: xvfb-run -a npm test
-        continue-on-error: true
         env:
           DISPLAY: ':99.0'

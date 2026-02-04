@@ -383,7 +383,7 @@ suite('Integration Tests', () => {
 
         // Install second document with "manual" mode
         await documentService.installDocument(documents[1]);
-        await documentService.setInclusionMode(documents[1].name, 'manual');
+        await documentService.setInclusionMode(documents[1].path, 'manual');
 
         // Get installed documents
         const installed = await documentService.getInstalledDocuments();
@@ -418,7 +418,7 @@ suite('Integration Tests', () => {
         const documents = await documentService.fetchDocumentList();
         await documentService.quickLoadDocument(documents[0]); // always
         await documentService.installDocument(documents[1]);
-        await documentService.setInclusionMode(documents[1].name, 'manual');
+        await documentService.setInclusionMode(documents[1].path, 'manual');
 
         // Test filter toggle
         const initialState = treeProvider.getShowActiveOnly();
