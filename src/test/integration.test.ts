@@ -131,6 +131,14 @@ suite('Integration Tests', () => {
     let documentService: DocumentService;
     let treeProvider: SteeringDocsTreeProvider;
 
+    // Helper function to check YAML key-value pairs regardless of quoting style
+    // js-yaml outputs without quotes for simple strings, single quotes for special chars
+    function containsYamlValue(content: string, key: string, value: string): boolean {
+        // Match: key: value, key: "value", key: 'value'
+        const pattern = new RegExp(`${key}:\\s*["']?${value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}["']?`);
+        return pattern.test(content);
+    }
+
     // Helper function to get the correct file URI for a document
     function getDocumentFileUri(doc: DocumentMetadata): vscode.Uri {
         const pathParts = doc.path.split('/');
@@ -251,7 +259,7 @@ suite('Integration Tests', () => {
         // Verify inclusion mode is set to "always"
         const content = await vscode.workspace.fs.readFile(fileUri);
         const contentStr = Buffer.from(content).toString('utf8');
-        assert.ok(contentStr.includes('inclusion: "always"'), 'Should have inclusion mode set to always');
+        assert.ok(containsYamlValue(contentStr, 'inclusion', 'always'), 'Should have inclusion mode set to always');
     });
 
     test('End-to-end: Update document', async () => {
@@ -296,7 +304,7 @@ suite('Integration Tests', () => {
         const fileUri = getDocumentFileUri(doc);
         const content = await vscode.workspace.fs.readFile(fileUri);
         const contentStr = Buffer.from(content).toString('utf8');
-        assert.ok(contentStr.includes('inclusion: "always"'), 'File should contain inclusion: "always"');
+        assert.ok(containsYamlValue(contentStr, 'inclusion', 'always'), 'File should contain inclusion: always');
     });
 
     test('Inclusion mode: Change to manual', async () => {
@@ -332,8 +340,8 @@ suite('Integration Tests', () => {
         const fileUri = getDocumentFileUri(doc);
         const content = await vscode.workspace.fs.readFile(fileUri);
         const contentStr = Buffer.from(content).toString('utf8');
-        assert.ok(contentStr.includes('inclusion: "fileMatch"'), 'File should contain inclusion: "fileMatch"');
-        assert.ok(contentStr.includes('fileMatchPattern: "*.ts"'), 'File should contain fileMatchPattern');
+        assert.ok(containsYamlValue(contentStr, 'inclusion', 'fileMatch'), 'File should contain inclusion: fileMatch');
+        assert.ok(containsYamlValue(contentStr, 'fileMatchPattern', '\\*.ts'), 'File should contain fileMatchPattern');
     });
 
     test('Frontmatter updates: Preserve existing properties', async () => {
@@ -349,8 +357,8 @@ suite('Integration Tests', () => {
         const originalStr = Buffer.from(originalContent).toString('utf8');
 
         // Verify original frontmatter properties exist
-        assert.ok(originalStr.includes('version: "1.0.0"'), 'Should have version');
-        assert.ok(originalStr.includes('category: "test"'), 'Should have category');
+        assert.ok(containsYamlValue(originalStr, 'version', '1.0.0'), 'Should have version');
+        assert.ok(containsYamlValue(originalStr, 'category', 'test'), 'Should have category');
 
         // Set inclusion mode
         await documentService.setInclusionMode(doc.path, 'always');
@@ -360,9 +368,9 @@ suite('Integration Tests', () => {
         const updatedStr = Buffer.from(updatedContent).toString('utf8');
 
         // Verify original properties are preserved
-        assert.ok(updatedStr.includes('version: "1.0.0"'), 'Should preserve version');
-        assert.ok(updatedStr.includes('category: "test"'), 'Should preserve category');
-        assert.ok(updatedStr.includes('inclusion: "always"'), 'Should add inclusion mode');
+        assert.ok(containsYamlValue(updatedStr, 'version', '1.0.0'), 'Should preserve version');
+        assert.ok(containsYamlValue(updatedStr, 'category', 'test'), 'Should preserve category');
+        assert.ok(containsYamlValue(updatedStr, 'inclusion', 'always'), 'Should add inclusion mode');
     });
 
     test('Offline behavior: Use cached data', async () => {
