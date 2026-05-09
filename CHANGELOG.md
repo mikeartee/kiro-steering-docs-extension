@@ -2,6 +2,11 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
+## [0.4.1]
+
+### Fixed
+- VSIX package no longer bundles `node_modules/`, `out/test/`, `.kiro/`, `.husky/`, `.claude/`, workspace files, or dev-only markdown docs — package size reduced from ~1MB to ~162KB
+
 ## [0.4.0] - 2025-01-23
 
 ### Added
