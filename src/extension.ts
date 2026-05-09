@@ -111,12 +111,47 @@ export function activate(context: vscode.ExtensionContext): void {
     
     if (autoCheckUpdates) {
         // Check for updates in the background (don't await)
-        documentService.checkForUpdates().then(updates => {
+        documentService.checkForUpdates().then(async updates => {
             if (updates.length > 0) {
+                // Build list of file names for the notification
+                const fileNames = updates.map(u => u.document.name).join(', ');
                 const message = updates.length === 1
-                    ? '1 steering document has an update available'
-                    : `${updates.length} steering documents have updates available`;
-                vscode.window.showInformationMessage(message);
+                    ? `Update available: ${fileNames}`
+                    : `${updates.length} updates available: ${fileNames}`;
+                
+                // Show notification with action button
+                const action = await vscode.window.showInformationMessage(
+                    message,
+                    'View Updates'
+                );
+                
+                if (action === 'View Updates') {
+                    // Show Quick Pick with update options
+                    const items = updates.map(u => ({
+                        label: u.document.name,
+                        description: `${u.currentVersion} -> ${u.newVersion}`,
+                        detail: u.document.path,
+                        update: u
+                    }));
+                    
+                    const selected = await vscode.window.showQuickPick(items, {
+                        placeHolder: 'Select documents to update',
+                        canPickMany: true
+                    });
+                    
+                    if (selected && selected.length > 0) {
+                        for (const item of selected) {
+                            try {
+                                await documentService.updateDocument(item.update.document);
+                            } catch (error) {
+                                vscode.window.showErrorMessage(
+                                    `Failed to update ${item.label}: ${error instanceof Error ? error.message : 'Unknown error'}`
+                                );
+                            }
+                        }
+                        treeProvider.refresh();
+                    }
+                }
             }
         }).catch(error => {
             // Silently fail - don't bother user on activation

@@ -2,6 +2,13 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
+## [0.4.2]
+
+### Fixed
+
+- Removed `js-yaml` runtime dependency — replaced with inline YAML parser to fix activation failure (`Cannot find module 'js-yaml'`) caused by missing bundler
+- Tightened frontmatter types from `Record<string, any>` to `Record<string, unknown>` with proper type narrowing
+
 ## [0.4.1]
 
 ### Fixed

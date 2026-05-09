@@ -8,24 +8,20 @@ tags:
   - composition-api
   - typescript
   - patterns
-  - react
   - best-practices
 inclusion: fileMatch
 applicableTo:
   - web-app
   - library
 requiredDependencies:
-  - react
   - vue
 filePatterns:
-  - components/**/*.jsx
-  - components/**/*.tsx
-  - src/components/**/*
+  - '**/*.vue'
   - components/**/*.vue
   - src/components/**/*.vue
 version: 1.0.0
-fileMatchPattern: components/**/*.jsx
-sha: 7d915bcdea914ac915fa9023aae791f8f0e7e1e9
+fileMatchPattern: components/**/*.vue
+sha: 9ff8affd0ebef4a968ebf4459f8493ed73e77f25
 ---
 
 ## Core Principle

@@ -6,8 +6,6 @@ tags:
   - javascript
   - formatting
   - code-generation
-  - react
-  - components
   - best-practices
 inclusion: fileMatch
 applicableTo:
@@ -15,15 +13,10 @@ applicableTo:
   - library
   - cli-tool
   - api-server
-requiredDependencies:
-  - react
 filePatterns:
   - '**/*.js'
   - '**/*.mjs'
   - '**/*.cjs'
-  - components/**/*.jsx
-  - components/**/*.tsx
-  - src/components/**/*
 fileMatchPattern: '**/*.js'
 sha: 42b1c955cc0f7081080cafb35fec1b34c2ddfe9f
 ---

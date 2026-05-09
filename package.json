@@ -2,7 +2,7 @@
   "name": "steering-docs-browser",
   "displayName": "Kiro Steering Documents Browser",
   "description": "Browse, preview, and install Kiro steering documents from GitHub",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "publisher": "mikeartee",
   "icon": "icon.png",
   "license": "MIT",
@@ -258,9 +258,5 @@
     "sharp": "^0.34.5",
     "sinon": "^21.0.0",
     "typescript": "^5.1.0"
-  },
-  "dependencies": {
-    "@types/js-yaml": "^4.0.5",
-    "js-yaml": "^4.1.1"
   }
 }

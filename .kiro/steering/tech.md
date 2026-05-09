@@ -1,4 +1,10 @@
 ---
+title: Tech Stack
+description: Core technologies, dependencies, and build system configuration
+tags:
+  - tech
+  - stack
+  - dependencies
 version: "1.0.0"
 inclusion: always
 ---

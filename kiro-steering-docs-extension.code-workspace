@@ -1,0 +1,23 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../kiro-steering-docs"
+		},
+		{
+			"path": "../kiro-hooks-extension"
+		},
+		{
+			"path": "../kiro-skills-docs"
+		},
+		{
+			"path": "../kiro-skills-docs-extension"
+		},
+		{
+			"path": "../kiro-hooks-docs"
+		}
+	],
+	"settings": {}
+}

@@ -12,6 +12,23 @@ import {
 } from '../models/types';
 
 /**
+ * Safely extract a string value from an unknown frontmatter field.
+ */
+function asString(value: unknown): string | undefined {
+    return typeof value === 'string' ? value : undefined;
+}
+
+/**
+ * Safely extract a string array from an unknown frontmatter field.
+ */
+function asStringArray(value: unknown): string[] {
+    if (Array.isArray(value)) {
+        return value.filter((v): v is string => typeof v === 'string');
+    }
+    return [];
+}
+
+/**
  * Service for managing steering documents
  */
 export class DocumentService {
@@ -87,11 +104,11 @@ export class DocumentService {
                         installedDocs.push({
                             name,
                             path: relativePath,
-                            version: frontmatter.version || '1.0.0',
+                            version: asString(frontmatter['version']) || '1.0.0',
                             installedAt: new Date(stats.mtime),
-                            sha: frontmatter.sha || '',
-                            inclusionMode: frontmatter.inclusion as 'always' | 'manual' | 'fileMatch' | undefined,
-                            fileMatchPattern: frontmatter.fileMatchPattern
+                            sha: asString(frontmatter['sha']) || '',
+                            inclusionMode: asString(frontmatter['inclusion']) as 'always' | 'manual' | 'fileMatch' | undefined,
+                            fileMatchPattern: asString(frontmatter['fileMatchPattern'])
                         });
                     } catch (error) {
                         console.error(`Failed to read document ${name}:`, error);
@@ -140,15 +157,15 @@ export class DocumentService {
                         name: item.name,
                         path: item.path,
                         category: categoryId,
-                        version: frontmatter.version || '1.0.0',
-                        description: frontmatter.description || '',
+                        version: asString(frontmatter['version']) || '1.0.0',
+                        description: asString(frontmatter['description']) || '',
                         sha: item.sha,
                         size: item.size,
                         downloadUrl: item.download_url,
-                        tags: frontmatter.tags || [],
-                        applicableTo: frontmatter.applicableTo || [],
-                        requiredDependencies: frontmatter.requiredDependencies || [],
-                        filePatterns: frontmatter.filePatterns || []
+                        tags: asStringArray(frontmatter['tags']),
+                        applicableTo: asStringArray(frontmatter['applicableTo']),
+                        requiredDependencies: asStringArray(frontmatter['requiredDependencies']),
+                        filePatterns: asStringArray(frontmatter['filePatterns'])
                     };
                     console.log('[DocumentService] Parsed document:', doc.name, {
                         tags: doc.tags,
@@ -373,7 +390,7 @@ export class DocumentService {
 
             // Add SHA to frontmatter for version tracking
             const { frontmatter, body } = this.frontmatterService.parse(content);
-            frontmatter.sha = doc.sha;
+            frontmatter['sha'] = doc.sha;
             content = this.frontmatterService.stringify(frontmatter, body);
 
             // Save document
@@ -551,6 +568,12 @@ export class DocumentService {
         const updates: UpdateInfo[] = [];
 
         for (const installed of installedDocuments) {
+            // Skip files without SHA - these are local-only or weren't installed via the extension
+            // Without a SHA, we can't reliably determine if an update is available
+            if (!installed.sha) {
+                continue;
+            }
+
             // Find matching remote document by path (not just name)
             // This ensures documents with the same name in different folders are treated as different documents
             const remote = remoteDocuments.find(doc => doc.path === installed.path);
@@ -602,8 +625,8 @@ export class DocumentService {
             const currentContentStr = Buffer.from(currentContent).toString('utf-8');
             const { frontmatter: currentFrontmatter } = this.frontmatterService.parse(currentContentStr);
             
-            const currentInclusionMode = currentFrontmatter.inclusion as 'always' | 'manual' | 'fileMatch' | undefined;
-            const currentFileMatchPattern = currentFrontmatter.fileMatchPattern;
+            const currentInclusionMode = asString(currentFrontmatter['inclusion']) as 'always' | 'manual' | 'fileMatch' | undefined;
+            const currentFileMatchPattern = asString(currentFrontmatter['fileMatchPattern']);
 
             // Download new content
             let newContent = await this.fetchDocumentContent(doc.path);
@@ -619,7 +642,7 @@ export class DocumentService {
 
             // Add SHA to frontmatter for version tracking
             const { frontmatter, body } = this.frontmatterService.parse(newContent);
-            frontmatter.sha = doc.sha;
+            frontmatter['sha'] = doc.sha;
             newContent = this.frontmatterService.stringify(frontmatter, body);
 
             // Write updated content to the same subdirectory location

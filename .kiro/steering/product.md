@@ -1,4 +1,10 @@
 ---
+title: Product Overview
+description: Overview of the Kiro Steering Docs VS Code extension and its capabilities
+tags:
+  - product
+  - overview
+  - extension
 version: "1.0.0"
 inclusion: always
 ---

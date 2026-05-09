@@ -1,4 +1,10 @@
 ---
+title: Development Guidelines
+description: Mandatory development protocols including gap analysis, shell commands, and debugging procedures
+tags:
+  - development
+  - guidelines
+  - protocols
 version: "1.0.0"
 inclusion: always
 ---

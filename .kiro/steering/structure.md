@@ -1,4 +1,10 @@
 ---
+title: Project Structure
+description: Directory layout and architecture patterns for the extension codebase
+tags:
+  - structure
+  - architecture
+  - patterns
 version: "1.0.0"
 inclusion: always
 ---

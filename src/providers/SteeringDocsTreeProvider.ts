@@ -156,8 +156,8 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
             // Find matching installed document by path instead of name
             const installed = this.installedDocuments.find(inst => inst.path === doc.path);
 
-            // Check if document has an update
-            const hasUpdate = installed ? installed.sha !== doc.sha : false;
+            // Check if document has an update (only if installed with SHA tracking)
+            const hasUpdate = installed && installed.sha ? installed.sha !== doc.sha : false;
 
             // Apply active filter if enabled
             if (this.showActiveOnly) {
@@ -387,7 +387,7 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
                 if (slashIndex === -1) {
                     // Document is a direct child of this folder
                     const installed = this.installedDocuments.find(inst => inst.path === doc.path);
-                    const hasUpdate = installed ? installed.sha !== doc.sha : false;
+                    const hasUpdate = installed && installed.sha ? installed.sha !== doc.sha : false;
 
                     // Apply active filter if enabled
                     if (this.showActiveOnly) {
@@ -476,8 +476,12 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
     private createDocumentTreeItem(doc: DocumentTreeItem): vscode.TreeItem {
         const item = new vscode.TreeItem(doc.metadata.name, vscode.TreeItemCollapsibleState.None);
         
-        // Set description (shown next to label)
-        item.description = doc.metadata.version;
+        // Set description (shown next to label) - show version diff if update available
+        if (doc.hasUpdate && doc.installed) {
+            item.description = `${doc.installed.version} -> ${doc.metadata.version}`;
+        } else {
+            item.description = doc.metadata.version;
+        }
 
         // Set tooltip with full information
         item.tooltip = this.createDocumentTooltip(doc);
@@ -521,11 +525,11 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
         }
 
         if (doc.hasUpdate) {
-            lines.push('⚠️ Update available');
+            lines.push(`[UPDATE AVAILABLE] ${doc.installed?.version || 'unknown'} -> ${doc.metadata.version}`);
         }
 
         if (this.isOffline) {
-            lines.push('📡 Offline mode - using cached data');
+            lines.push('[OFFLINE] Using cached data');
         }
 
         return lines.join('\n');
@@ -555,6 +559,11 @@ export class SteeringDocsTreeProvider implements vscode.TreeDataProvider<TreeIte
         if (!doc.installed) {
             // Not installed - show outline circle
             return new vscode.ThemeIcon('circle-outline');
+        }
+
+        // If update is available, show orange icon regardless of inclusion mode
+        if (doc.hasUpdate) {
+            return new vscode.ThemeIcon('circle-filled', new vscode.ThemeColor('charts.orange'));
         }
 
         // Installed - show colored dot based on inclusion mode

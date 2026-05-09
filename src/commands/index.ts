@@ -447,7 +447,7 @@ async function handleCheckUpdates(
   documentService: DocumentService,
   treeProvider: SteeringDocsTreeProvider
 ): Promise<void> {
-  await vscode.window.withProgress(
+  const updates = await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
       title: "Checking for updates...",
@@ -455,30 +455,82 @@ async function handleCheckUpdates(
     },
     async () => {
       try {
-        const updates = await documentService.checkForUpdates();
-
-        // Refresh tree view to show update indicators
-        treeProvider.refresh();
-
-        // Show summary notification
-        if (updates.length === 0) {
-          vscode.window.showInformationMessage("All documents are up to date");
-        } else {
-          const message =
-            updates.length === 1
-              ? "1 document has an update available"
-              : `${updates.length} documents have updates available`;
-          vscode.window.showInformationMessage(message);
-        }
+        return await documentService.checkForUpdates();
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Unknown error";
         vscode.window.showErrorMessage(
           `Failed to check for updates: ${message}`
         );
+        return [];
       }
     }
   );
+
+  // Refresh tree view to show update indicators
+  treeProvider.refresh();
+
+  // Show summary notification
+  if (updates.length === 0) {
+    vscode.window.showInformationMessage("All documents are up to date");
+  } else {
+    // Build list of file names for the notification
+    const fileNames = updates.map(u => u.document.name).join(', ');
+    const message = updates.length === 1
+      ? `Update available: ${fileNames}`
+      : `${updates.length} updates available: ${fileNames}`;
+    
+    // Show notification with action button
+    const action = await vscode.window.showInformationMessage(
+      message,
+      'Update All',
+      'Select Updates'
+    );
+    
+    if (action === 'Update All') {
+      // Update all documents
+      for (const update of updates) {
+        try {
+          await documentService.updateDocument(update.document);
+        } catch (error) {
+          vscode.window.showErrorMessage(
+            `Failed to update ${update.document.name}: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+        }
+      }
+      treeProvider.refresh();
+      vscode.window.showInformationMessage('All documents updated successfully');
+    } else if (action === 'Select Updates') {
+      // Show Quick Pick with update options
+      const items = updates.map(u => ({
+        label: u.document.name,
+        description: `${u.currentVersion} -> ${u.newVersion}`,
+        detail: u.document.path,
+        update: u
+      }));
+      
+      const selected = await vscode.window.showQuickPick(items, {
+        placeHolder: 'Select documents to update',
+        canPickMany: true
+      });
+      
+      if (selected && selected.length > 0) {
+        for (const item of selected) {
+          try {
+            await documentService.updateDocument(item.update.document);
+          } catch (error) {
+            vscode.window.showErrorMessage(
+              `Failed to update ${item.label}: ${error instanceof Error ? error.message : 'Unknown error'}`
+            );
+          }
+        }
+        treeProvider.refresh();
+        vscode.window.showInformationMessage(
+          `Updated ${selected.length} document${selected.length > 1 ? 's' : ''}`
+        );
+      }
+    }
+  }
 }
 
 /**
