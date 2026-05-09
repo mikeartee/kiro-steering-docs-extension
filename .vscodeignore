@@ -1,15 +1,37 @@
-.vscode/**
-.vscode-test/**
+# Source files (compiled to out/)
 src/**
-.gitignore
-.yarnrc
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/.eslintrc.json
-**/*.map
 **/*.ts
 
-# User-specific settings (should not be in VSIX)
+# Test output (never ship tests)
+out/test/**
+
+# Dev tooling
+.vscode/**
+.vscode-test/**
+.github/**
+.husky/**
+.kiro/**
+node_modules/**
+test-workspace/**
+
+# Config files
+.gitignore
+.yarnrc
+.eslintrc.json
+**/tsconfig.json
+**/*.map
+
+# Workspace files
+*.code-workspace
+
+# Scratch / planning docs
+TODO.md
+RECOMMENDATION_STATUS.md
+GITHUB_TOKEN_SETUP.md
+
+# Other non-essential files
 .claude/**
-.kiro/settings/**
-test-workspace/.kiro/settings/**
+images/**
+
+# Build artifacts
+**/*.vsix
