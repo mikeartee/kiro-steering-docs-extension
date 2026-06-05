@@ -2,6 +2,14 @@
 
 All notable changes to the "Kiro Steering Documents Browser" extension will be documented in this file.
 
+## [0.4.3]
+
+### Changed
+
+- Replaced the README's embedded changelog with a link to `CHANGELOG.md` to prevent future drift
+- Aligned the README "Examples" section to real steering documents and the actual tree-view layout (category → folder → filename)
+- Updated copyright year to `2025-2026` in README and LICENSE
+
 ## [0.4.2]
 
 ### Fixed
