@@ -67,7 +67,13 @@ invalid: yaml: content: here
 
             const result = service.parse(content);
 
-            assert.deepStrictEqual(result.frontmatter, {});
+            // The inline parser (introduced in 0.4.2, replacing js-yaml) is
+            // tolerant: it splits on the first colon and keeps the remainder
+            // as a raw string value rather than throwing. It does not crash on
+            // malformed input, and the body is still extracted correctly.
+            assert.deepStrictEqual(result.frontmatter, {
+                invalid: 'yaml: content: here'
+            });
             assert.strictEqual(result.body, '\n# Document Content');
         });
 
