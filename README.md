@@ -197,17 +197,17 @@ When an update is available, the document description shows the version change (
 
 ## Examples
 
-### Example 1: Installing TypeScript Coding Standards
+### Example 1: Installing TypeScript Standards
 
-1. Expand the "Coding Standards" category
-2. Find "TypeScript Best Practices"
+1. Expand the "Code Formatting" category, then the `languages` folder
+2. Find `typescript-formatting.md`
 3. Click the eye icon to preview the content
 4. Right-click and select "Quick Load (Install & Activate)"
 5. The document is now active in all Kiro conversations
 
 ### Example 2: Setting Up Language-Specific Guidance
 
-1. Install "Python Style Guide"
+1. Install `python-formatting.md` from "Code Formatting" → `languages`
 2. Right-click the installed document
 3. Select "Set Inclusion: File Match"
 4. Enter pattern: `*.py`
@@ -215,10 +215,10 @@ When an update is available, the document description shows the version change (
 
 ### Example 3: Using Manual Reference Documents
 
-1. Install "Deployment Checklist"
+1. Install `semantic-contracts-for-kiro.md` from the "Semantic Anchors" category
 2. Right-click and select "Set Inclusion: Manual"
-3. In Kiro chat, reference it with: `#deployment-checklist.md`
-4. Kiro loads the checklist only for that conversation
+3. In Kiro chat, reference it with: `#semantic-contracts-for-kiro.md`
+4. Kiro loads the document only for that conversation
 
 ## Kiro Steering Document Usage
 
@@ -371,118 +371,11 @@ For issues, feature requests, or contributions:
 
 MIT License - see [LICENSE](LICENSE) file for details
 
-Copyright (c) 2025 Michael Rewiri-Thorsen
+Copyright (c) 2025-2026 Michael Rewiri-Thorsen
 
 ## Changelog
 
-### 0.4.0 (2025-01-23)
-
-- **Feature**: Actionable update notifications showing which files have updates
-- **Feature**: "View Updates" button to select which files to update
-- **Feature**: Orange icon indicates update available (takes priority over inclusion mode colors)
-- **Feature**: Version diff shown in description when update available (e.g., "1.0.0 -> 1.1.0")
-- **Fixed**: Files without SHA in frontmatter are now skipped during update detection
-- **Changed**: Removed emojis from tooltips (not supported in Kiro tree view)
-
-### 0.3.3 (2025-01-21)
-
-- **Fixed**: Document update menu not appearing (restored `document-update-available` context value)
-
-### 0.3.2 (2025-01-21)
-
-- **Fixed**: VSIX packaging to include `node_modules` dependencies
-- **Fixed**: Extension activation failure due to missing `js-yaml` module
-
-### 0.3.1 (2025-01-21)
-
-- **Changed**: Improved `.gitignore` to exclude user-specific settings
-- **Fixed**: Removed sensitive files from git tracking
-
-### 0.3.0 (2025-01-21)
-
-- **Feature**: Secure token storage using SecretStorage API (OS credential manager)
-- **Feature**: Token management commands (Set, Clear, Check Status)
-- **Feature**: Audit logging for security-relevant token operations
-- **Feature**: Automatic migration from legacy settings to secure storage
-- **Feature**: Token format validation before storage
-- **Changed**: Dynamic token updates without IDE restart
-- **Deprecated**: `steeringDocs.githubToken` setting (use commands instead)
-
-### 0.2.2 (2025-01-11)
-
-- **Changed**: Updated documentation to clarify Kiro IDE exclusivity
-- **Improved**: Cleaner README with consistent Kiro branding
-
-### 0.2.0 (2025-01-29)
-
-- **Feature**: AI-powered document recommendations based on workspace analysis
-- **Feature**: Smart recommendation scoring analyzing dependencies, languages, and frameworks
-- **Feature**: Multi-select Quick Pick for bulk document activation
-- **Feature**: Smart default inclusion modes based on document metadata
-- **Feature**: Integration with Kiro sidebar view container
-- **Changed**: Extension now appears in Kiro sidebar instead of separate view
-- **Changed**: Streamlined recommendation workflow with direct activation
-- **Improved**: Icon indicators - Green (always), Yellow (fileMatch), Outline (manual/not installed)
-- **Fixed**: Recommendation system handles empty workspaces correctly
-- **Fixed**: Bulk activation skips already-installed documents
-
-### 0.1.9 (2025-11-25)
-
-- **Changed**: Updated extension icon with new design
-
-### 0.1.8 (2025-11-24)
-
-- **Fixed**: Double layering in tree view where category folders were duplicated
-- **Fixed**: Tree view now correctly strips category prefix from document paths
-- **Improved**: Cleaner folder hierarchy display for better navigation
-
-### 0.1.7 (2025-11-24)
-
-- **Feature**: Hierarchical folder tree view for nested document structures
-- **Feature**: Visual folder organization within categories
-- **Improved**: Better navigation for large document collections with nested folders
-- **Fixed**: Document installation, updates, and uninstall now work correctly with subdirectories
-
-### 0.1.6 (2025-11-24)
-
-- **Feature**: Recursive directory traversal for fetching documents from GitHub
-- **Feature**: Support for nested folder structures in remote repository
-
-### 0.1.5 (2025-11-17)
-
-- **Metadata**: Added repository, bugs, and homepage links to package.json for better marketplace integration
-
-### 0.1.4 (2025-11-17)
-
-- **Documentation**: Updated README with correct dates and removed broken image references
-
-### 0.1.3 (2025-11-17)
-
-- **Fixed**: README.md files are now filtered from document list (repository documentation, not steering docs)
-- **Fixed**: Docs and Templates folders are now excluded from categories (repository infrastructure)
-- **Improved**: Cache clearing functionality now works correctly with refresh command
-- **Enhanced**: Cleaner document browsing experience with better filtering
-
-### 0.1.2 (2025-11-17)
-
-- Internal improvements and bug fixes
-
-### 0.1.1 (2025-11-17)
-
-- Initial marketplace release
-- Bug fixes and stability improvements
-
-### 0.1.0 (Initial Development)
-
-- Simple toggle functionality for activating/deactivating documents
-- Kiro sidebar integration for better organization
-- Browse and preview steering documents from GitHub
-- Install documents with inclusion mode management
-- Quick Load feature for instant activation
-- Update detection and management
-- Offline support with caching
-- Document categories and organization
-- Markdown preview for documents
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ## Acknowledgments
 
